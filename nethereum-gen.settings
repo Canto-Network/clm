@@ -1,0 +1,7 @@
+{
+    "projectName": "LendingRefactored",
+    "namespace": "LendingRefactored.Contracts",
+    "lang": 0,
+    "autoCodeGen": true,
+    "projectPath": "../"
+}

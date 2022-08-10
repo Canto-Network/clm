@@ -1,7 +1,6 @@
 const {ethers} = require("hardhat");
 const {canto} = require("../../config/index");
 
-
 async function main() { 
 	const [dep] = await ethers.getSigners();
 

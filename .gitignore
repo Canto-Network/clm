@@ -9,3 +9,4 @@ deployments
 artifacts
 .DS_STORE
 hardhat.config.ts
+.vscode

@@ -6,38 +6,38 @@ import "./Treasury/TreasuryInterfaces.sol";
 import "./ErrorReporter.sol";
 import "./NoteInterest.sol";
 
-
 contract CNote is CErc20Delegate {
-
     event AccountantSet(address accountant, address accountantPrior);
-    error FailedTransfer(uint amount);
-
+    error FailedTransfer(uint256 amount);
 
     AccountantInterface public _accountant; // accountant private _accountant = Accountant(address(0));
-    
+
     function setAccountantContract(address accountant_) public {
-        require(msg.sender == admin, "CNote::_setAccountantContract:Only admin may call this function");
+        require(
+            msg.sender == admin,
+            "CNote::_setAccountantContract:Only admin may call this function"
+        );
 
         emit AccountantSet(accountant_, address(_accountant));
-	    _accountant = AccountantInterface(accountant_);
+        _accountant = AccountantInterface(accountant_);
     }
 
-    /** 
-    * @dev return the current address of the Accounant
+    /**
+     * @dev return the current address of the Accounant
      */
-    function getAccountant() external view returns(address) {
+    function getAccountant() external view returns (address) {
         return address(_accountant);
     }
 
-    /** 
-     * @dev getCashPrior retrieves balance of the accountant (not cNote contract)  
+    /**
+     * @dev getCashPrior retrieves balance of the accountant (not cNote contract)
      */
-    function getCashPrior() virtual override internal view returns(uint) {
+    function getCashPrior() internal view virtual override returns (uint256) {
         EIP20Interface token = EIP20Interface(underlying);
         return token.balanceOf(address(_accountant));
     }
 
-    function accrueInterest() virtual override public returns(uint) {
+    function accrueInterest() public virtual override returns (uint256) {
         NoteRateModel(address(interestRateModel)).updateBaseRate(); //update the baseRate of Note
         return super.accrueInterest();
     }
@@ -47,8 +47,14 @@ contract CNote is CErc20Delegate {
      * @dev This function does not accrue efore calculating the exchange rate
      * @return calculated exchange rate scaled by 1e18
      */
-    function exchangeRateStoredInternal() virtual override internal view returns (uint) {
-        uint _totalSupply = totalSupply;
+    function exchangeRateStoredInternal()
+        internal
+        view
+        virtual
+        override
+        returns (uint256)
+    {
+        uint256 _totalSupply = totalSupply;
         if (_totalSupply == 0) {
             /*
              * If there are no tokens minted:
@@ -60,8 +66,9 @@ contract CNote is CErc20Delegate {
              * Otherwise:
              *  exchangeRate = (totalCash + totalBorrows - totalReserves) / totalSupply
              */
-            uint cashPlusBorrowsMinusReserves = totalBorrows - totalReserves;// totalCash in cNote Lending Market is zero, thus it is not factored into the exchangeRate
-            uint exchangeRate = cashPlusBorrowsMinusReserves * expScale / _totalSupply;
+            uint256 cashPlusBorrowsMinusReserves = totalBorrows - totalReserves; // totalCash in cNote Lending Market is zero, thus it is not factored into the exchangeRate
+            uint256 exchangeRate = (cashPlusBorrowsMinusReserves * expScale) /
+                _totalSupply;
 
             return exchangeRate;
         }
@@ -76,7 +83,12 @@ contract CNote is CErc20Delegate {
      *      Note: This wrapper safely handles non-standard ERC-20 tokens that do not return a value.
      *            See here: https://medium.com/coinmonks/missing-return-value-bug-at-least-130-tokens-affected-d67bf08521ca
      */
-    function doTransferIn(address from, uint amount) virtual override internal returns (uint) {
+    function doTransferIn(address from, uint256 amount)
+        internal
+        virtual
+        override
+        returns (uint256)
+    {
         require(address(_accountant) != address(0)); //check that the accountant has been set
 
         EIP20Interface token = EIP20Interface(underlying);
@@ -86,29 +98,32 @@ contract CNote is CErc20Delegate {
         bool success;
         assembly {
             switch returndatasize()
-                case 0 {                       // This is a non-standard ERC-20
-                    success := not(0)          // set success to true
-                }
-                case 32 {                      // This is a compliant ERC-20
-                    returndatacopy(0, 0, 32)
-                    success := mload(0)        // Set `success = returndata` of override external call
-                }
-                default {                      // This is an excessively non-compliant ERC-20, revert.
-                    revert(0, 0)
-                }
+            case 0 {
+                // This is a non-standard ERC-20
+                success := not(0) // set success to true
+            }
+            case 32 {
+                // This is a compliant ERC-20
+                returndatacopy(0, 0, 32)
+                success := mload(0) // Set `success = returndata` of override external call
+            }
+            default {
+                // This is an excessively non-compliant ERC-20, revert.
+                revert(0, 0)
+            }
         }
         require(success, "CNote::TOKEN_TRANSFER_IN_FAILED");
 
-        uint balanceAfter = token.balanceOf(address(this)); // Calculate the amount that was *actually* transferred
+        uint256 balanceAfter = token.balanceOf(address(this)); // Calculate the amount that was *actually* transferred
 
         if (from != address(_accountant)) {
-            uint err = _accountant.redeemMarket(balanceAfter); //Whatever is transferred into cNote is then redeemed by the accountant
-            if (err !=0) {
+            uint256 err = _accountant.redeemMarket(balanceAfter); //Whatever is transferred into cNote is then redeemed by the accountant
+            if (err != 0) {
                 revert AccountantSupplyError(balanceAfter);
             }
         }
-        
-        return balanceAfter;   // underflow already checked above, just subtract
+
+        return balanceAfter; // underflow already checked above, just subtract
     }
 
     /**
@@ -120,43 +135,57 @@ contract CNote is CErc20Delegate {
      *      Note: This wrapper safely handles non-standard ERC-20 tokens that do not return a value.
      *            See here: https://medium.com/coinmonks/missing-return-value-bug-at-least-130-tokens-affected-d67bf08521ca
      */
-    function doTransferOut(address payable to, uint amount) virtual override internal {
+    function doTransferOut(address payable to, uint256 amount)
+        internal
+        virtual
+        override
+    {
         require(address(_accountant) != address(0)); //check that the accountant has been set
         EIP20Interface token = EIP20Interface(underlying);
 
         if (to != address(_accountant)) {
-            uint err = _accountant.supplyMarket(amount); //Accountant redeems requisite cNote to supply this market
+            uint256 err = _accountant.supplyMarket(amount); //Accountant redeems requisite cNote to supply this market
             if (err != 0) {
                 revert AccountantRedeemError(amount);
             }
-        }   
+        }
 
         token.transfer(to, amount);
 
         bool success;
         assembly {
             switch returndatasize()
-                case 0 {                      // This is a non-standard ERC-20
-                    success := not(0)          // set success to true
-                }
-                case 32 {                     // This is a compliant ERC-20
-                    returndatacopy(0, 0, 32)
-                    success := mload(0)        // Set `success = returndata` of override external call
-                }
-                default {                     // This is an excessively non-compliant ERC-20, revert.
-                    revert(0, 0)
-                }
-        } 
+            case 0 {
+                // This is a non-standard ERC-20
+                success := not(0) // set success to true
+            }
+            case 32 {
+                // This is a compliant ERC-20
+                returndatacopy(0, 0, 32)
+                success := mload(0) // Set `success = returndata` of override external call
+            }
+            default {
+                // This is an excessively non-compliant ERC-20, revert.
+                revert(0, 0)
+            }
+        }
         require(success, "TOKEN_TRANSFER_OUT_FAILED");
     }
 
-        /**
-      * @notice Users borrow assets from the protocol to their own address
-      * @param borrowAmount The amount of the underlying asset to borrow
-      */
-    function borrowFresh(address payable borrower, uint borrowAmount) internal override {
+    /**
+     * @notice Users borrow assets from the protocol to their own address
+     * @param borrowAmount The amount of the underlying asset to borrow
+     */
+    function borrowFresh(address payable borrower, uint256 borrowAmount)
+        internal
+        override
+    {
         /* Fail if borrow not allowed */
-        uint allowed = comptroller.borrowAllowed(address(this), borrower, borrowAmount);
+        uint256 allowed = comptroller.borrowAllowed(
+            address(this),
+            borrower,
+            borrowAmount
+        );
         if (allowed != 0) {
             revert BorrowComptrollerRejection(allowed);
         }
@@ -176,14 +205,14 @@ contract CNote is CErc20Delegate {
          *  accountBorrowNew = accountBorrow + borrowAmount
          *  totalBorrowsNew = totalBorrows + borrowAmount
          */
-        uint accountBorrowsPrev = borrowBalanceStoredInternal(borrower);
-        uint accountBorrowsNew = accountBorrowsPrev + borrowAmount;
-        uint totalBorrowsNew = totalBorrows + borrowAmount;
+        uint256 accountBorrowsPrev = borrowBalanceStoredInternal(borrower);
+        uint256 accountBorrowsNew = accountBorrowsPrev + borrowAmount;
+        uint256 totalBorrowsNew = totalBorrows + borrowAmount;
 
         /////////////////////////
         // EFFECTS & INTERACTIONS
         // (No safe failures beyond this point)
-        
+
         /*
          * We invoke doTransferOut for the borrower and the borrowAmount.
          *  Note: The cToken must handle variations between ERC-20 and ETH underlying.
@@ -204,7 +233,6 @@ contract CNote is CErc20Delegate {
         emit Borrow(borrower, borrowAmount, accountBorrowsNew, totalBorrowsNew);
     }
 
-
     /**
      * @notice User redeems cTokens in exchange for the underlying asset
      * @dev Assumes interest has already been accrued up to the current block
@@ -212,12 +240,19 @@ contract CNote is CErc20Delegate {
      * @param redeemTokensIn The number of cTokens to redeem into underlying (only one of redeemTokensIn or redeemAmountIn may be non-zero)
      * @param redeemAmountIn The number of underlying tokens to receive from redeeming cTokens (only one of redeemTokensIn or redeemAmountIn may be non-zero)
      */
-    function redeemFresh(address payable redeemer, uint redeemTokensIn, uint redeemAmountIn) internal override {
-        require(redeemTokensIn == 0 || redeemAmountIn == 0, "one of redeemTokensIn or redeemAmountIn must be zero");
+    function redeemFresh(
+        address payable redeemer,
+        uint256 redeemTokensIn,
+        uint256 redeemAmountIn
+    ) internal override {
+        require(
+            redeemTokensIn == 0 || redeemAmountIn == 0,
+            "one of redeemTokensIn or redeemAmountIn must be zero"
+        );
         /* exchangeRate = invoke Exchange Rate Stored() */
-        Exp memory exchangeRate = Exp({mantissa: exchangeRateStoredInternal() });
-        uint redeemTokens;
-        uint redeemAmount;
+        Exp memory exchangeRate = Exp({mantissa: exchangeRateStoredInternal()});
+        uint256 redeemTokens;
+        uint256 redeemAmount;
         /* If redeemTokensIn > 0: */
         if (redeemTokensIn > 0) {
             /*
@@ -238,7 +273,11 @@ contract CNote is CErc20Delegate {
         }
 
         /* Fail if redeem not allowed */
-        uint allowed = comptroller.redeemAllowed(address(this), redeemer, redeemTokens);
+        uint256 allowed = comptroller.redeemAllowed(
+            address(this),
+            redeemer,
+            redeemTokens
+        );
         if (allowed != 0) {
             revert RedeemComptrollerRejection(allowed);
         }
@@ -261,24 +300,28 @@ contract CNote is CErc20Delegate {
          *  Note: The cToken must handle variations between ERC-20 and ETH underlying.
          *  On success, the cToken has redeemAmount less of cash.
          *  doTransferOut reverts if anything goes wrong, since we can't be sure if side effects occurred.
-         * accountant supplies market and receives cTokens at current exchange Rate 
+         * accountant supplies market and receives cTokens at current exchange Rate
          */
         doTransferOut(redeemer, redeemAmount);
-        
+
         /*
          * We write the previously calculated values into storage.
          *  totalSupply is updated after the accountant has supplied enough tokens for the transfer, and has received cTokens at the prior exchange Rate (without totalSupply being updated)
          */
         totalSupply = totalSupply - redeemTokens;
         accountTokens[redeemer] = accountTokens[redeemer] - redeemTokens;
-        
 
         /* We emit a Transfer event, and a Redeem event */
         emit Transfer(redeemer, address(this), redeemTokens);
         emit Redeem(redeemer, redeemAmount, redeemTokens);
 
         /* We call the defense hook */
-        comptroller.redeemVerify(address(this), redeemer, redeemAmount, redeemTokens);
+        comptroller.redeemVerify(
+            address(this),
+            redeemer,
+            redeemAmount,
+            redeemTokens
+        );
     }
 
     /*** Reentrancy Guard ***/
@@ -287,7 +330,7 @@ contract CNote is CErc20Delegate {
      */
     modifier nonReentrant() override {
         if (msg.sender != address(_accountant)) {
-            require(_notEntered, "re-entered"); //this is required as the Accountant must redeem / mint before users are able to borrow / repayBorrow 
+            require(_notEntered, "re-entered"); //this is required as the Accountant must redeem / mint before users are able to borrow / repayBorrow
         }
         _notEntered = false;
         _;

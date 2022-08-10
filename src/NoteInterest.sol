@@ -4,8 +4,6 @@ pragma solidity ^0.8.10;
 import "./PriceOracle.sol";
 import "./SafeMath.sol";
 import "./CErc20.sol";
-
-
 /**
   * @title note's interest rate model contract
   * @author canto
@@ -49,7 +47,7 @@ contract NoteRateModel is InterestRateModel{
     /**
      * @notice The frequency of updating Note's base rate
      */
-    uint public updateFrequency = 21600; // set by admin, default 6 hours
+    uint public updateFrequency = 2160; // set by admin, default 6 hours = 216000 seconds / 6 secs per block
 
     PriceOracle public oracle;
 
@@ -208,7 +206,7 @@ contract NoteRateModel is InterestRateModel{
     /**
       * @notice Sets the update frequency for Note's interest rate
       * @dev Admin function to set the update frequency
-      * @param newUpdateFrequency The new update frequency, in seconds
+      * @param newUpdateFrequency The new update frequency, in blocks
       */
     function _setUpdateFrequency(uint newUpdateFrequency) external {
         // Check caller is admin

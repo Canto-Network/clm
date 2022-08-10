@@ -56,9 +56,9 @@ describe("Testing CNote exchange rate with redeems", async () => {
         expect((await note.balanceOf(user2.address)).toBigInt() == ethers.utils.parseUnits("0", "18")).to.be.true
     })
     it ("Send 5,000,000 USDC to user1 and user2 and verify", async () => {
-        await usdc.transfer(user1.address, ethers.BigNumber.from("10000000000000"));
+        await usdc.transfer(user1.address, ethers.BigNumber.from("15000000000000"));
         await usdc.connect(user1).transfer(user2.address, ethers.BigNumber.from("5000000000000"));
-        expect(await usdc.balanceOf(user1.address)).to.eql(ethers.BigNumber.from("5000000000000"));
+        expect(await usdc.balanceOf(user1.address)).to.eql(ethers.BigNumber.from("10000000000000"));
         expect(await usdc.balanceOf(user2.address)).to.eql(ethers.BigNumber.from("5000000000000"));
     })
     it("Supply and collateralize USDC", async () => {
@@ -89,7 +89,7 @@ describe("Testing CNote exchange rate with redeems", async () => {
         expect(await cUsdc.balanceOf(user2.address)).to.eql(ethers.BigNumber.from("5000000000000"));
     })
     it("borrow 10000 Note as deployer and make swaps in the usdc/note pool", async () => {
-        await (await cNote.borrow(ethers.utils.parseUnits("10000", "18"))).wait()
+        await (await cNote.borrow(ethers.utils.parseUnits("100000", "18"))).wait()
         // check exchange rate is still 1e18
         let exchangeRate = (await cNote.exchangeRateStored()).toBigInt()
         expect(exchangeRate == ethers.utils.parseUnits("1", "18")).to.be.true
@@ -122,15 +122,15 @@ describe("Testing CNote exchange rate with redeems", async () => {
         await (await noteRate._setUpdateFrequency(0)).wait()
 
         // approve router to transferFrom deployer
-        await (await usdc.approve(router.address, ethers.utils.parseUnits("100", "6"))).wait()
+        await (await note.approve(router.address, ethers.utils.parseUnits("100", "18"))).wait()
 
         // now the deployer begins swapping (10 times)
         for (var i = 0; i < 9; i++) {
             await (await router.swapExactTokensForTokensSimple(
-                ethers.utils.parseUnits("10", "6"),
+                ethers.utils.parseUnits("10", "18"),
                 0, 
-                usdc.address, //from
-                note.address, //to 
+                note.address, //from
+                usdc.address, //to 
                 true, // stable
                 dep.address,
                 9999999999999
@@ -144,8 +144,8 @@ describe("Testing CNote exchange rate with redeems", async () => {
     it("now that note is trading above the dollar calculate the borrow/supply rate", async () => {
         let priceScaled =  BigInt(currentPrice) / BigInt(1e12)
         let priceNote = BigInt(1e18) * BigInt(1e18) / BigInt(priceScaled) // invert the price to get price of note in usdc
-        // 1 note is worth more than a dollar, how can we re-stabilize the price?
-        expect(priceNote > 1e18).to.be.true
+        // 1 note is worth less than a dollar, how can we re-stabilize the price?
+        expect(priceNote < 1e18).to.be.true
         // dont update the base rate and check that the borrowRate is correct 
         let initBorrowRate = (await noteRate.getBorrowRate(0,0,0)).toBigInt()
         console.log("init Borrow Rate: ", initBorrowRate)
@@ -155,13 +155,14 @@ describe("Testing CNote exchange rate with redeems", async () => {
         // now update the baseRate 
         await (await noteRate.updateBaseRate()).wait()
         let curBorrowRate = (await noteRate.getBorrowRate(0,0,0)).toBigInt()
+        console.log("initial Borrow Rate: ", initBorrowRate)
         console.log("new Borrow Rate: ", curBorrowRate)
         // note was trading above the dollar so we expect the borrowRate to have decreased, 
         let adjust = (await noteRate.adjusterCoefficient()).toBigInt()
         let diffPrice = diff(priceNote, BigInt(1e18))
         let interestAdjust = (diffPrice * adjust) / BigInt(1e18)
         // bc note is trading above the dollar decrease the borrow/supply rate
-        let expected = BigInt(2e16) - interestAdjust
+        let expected = BigInt(2e16) + interestAdjust
         expect(curBorrowRate == (expected / BigInt(5256666))).true
         expect((await cNote.borrowRatePerBlock()).toBigInt() == curBorrowRate).to.be.true
     })
@@ -175,38 +176,42 @@ describe("Testing CNote exchange rate with redeems", async () => {
         //compute priorRate (annualized)
         priorRate = (await noteRate.baseRatePerYear()).toBigInt()
         // now the deployer begins swapping (20 times)
+
+        await (await usdc.connect(user1).approve(router.address, ethers.utils.parseUnits("1000", "6"))).wait()
         for (var i = 0; i < 20; i++) {
             await (await router.connect(user1).swapExactTokensForTokensSimple(
-                ethers.utils.parseUnits("10", "18"),
+                ethers.utils.parseUnits("10", "6"),
                 0, 
-                note.address, //from
-                usdc.address, //to 
+                usdc.address, //from
+                note.address, //to 
                 true, // stable
                 user1.address,
                 9999999999999
             )).wait() // swap 10 note for usdc 20 times, naturally, note is now trading under the dollar
         }
+
         currentPrice = (await router.getUnderlyingPrice(cUsdc.address)).toBigInt()
         let priceScaled = BigInt(currentPrice) / BigInt(1e12)
         console.log("price: ", priceScaled)
-        // expect Note to now be trading under the dollar
-        expect(priceScaled > ethers.utils.parseUnits("1", "18").toBigInt()).to.be.true
+        // expect Note to now be trading over the dollar
+        expect(priceScaled < ethers.utils.parseUnits("1", "18").toBigInt()).to.be.true
     })
     it("compute the annualized borrow/supply rates now that note is trading under the dollar", async () => {
         let priceScaled =  BigInt(currentPrice) / BigInt(1e12)
         let priceNote = BigInt(1e18) * BigInt(1e18) / BigInt(priceScaled) // invert the price to get price of note in usdc
         console.log("priceNote: ", priceNote)
-        expect(priceNote < 1e18).to.be.true
+        expect(priceNote > 1e18).to.be.true
         // now update the baseRate 
         await (await noteRate.updateBaseRate()).wait()
         let curBorrowRate = (await noteRate.getBorrowRate(0,0,0)).toBigInt()
+        console.log("prior Borrow Rate: ", priorRate)
         console.log("new Borrow Rate: ", curBorrowRate)
         // note was trading above the dollar so we expect the borrowRate to have decreased, 
         let adjust = (await noteRate.adjusterCoefficient()).toBigInt()
         let diffPrice = diff(priceNote, BigInt(1e18))
         let interestAdjust = (diffPrice * adjust) / BigInt(1e18)
-        // bc note is trading under the dollar increase the borrow/supply rate
-        let expected = priorRate + interestAdjust
+        // bc note is trading over the dollar decrease the borrow/supply rate
+        let expected = priorRate - interestAdjust
         console.log("expected: ", expected)
         console.log("newBaseRatePerYear", (await noteRate.baseRatePerYear()).toBigInt())
         expect(diff(curBorrowRate, (expected / BigInt(5256666))) == BigInt(0)).true

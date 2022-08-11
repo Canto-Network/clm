@@ -136,11 +136,12 @@ describe("Testing CNote exchange rate with redeems", async () => {
     it("User2 supplies 3000000 NOTE", async () => {
         await note.connect(user2).approve(cNote.address, ethers.utils.parseUnits("300000000", "18"));
         await (await cNote.connect(user2).mint(ethers.utils.parseUnits("3000000", "18"))).wait();
-        const currentBorrows = (await cNote.callStatic.totalBorrowsCurrent()).toBigInt();
+        const currentBorrows = (await cNote.callStatic.totalBorrows()).toBigInt();
         const totalSupply = (await cNote.totalSupply()).toBigInt();
         const exchangeRate = currentBorrows * BigInt(1e18) / totalSupply;
         expect(exchangeRate).to.be.equal((await cNote.exchangeRateStored()).toBigInt()); //compare with internal exchangeRate
         // check that user1 received exchangeRate * NOTE amount of cNOTE
-        expect((await cNote.balanceOf(user2.address)).toBigInt()).to.equal(BigInt(3000000e18) * BigInt(1e18) / exchangeRate);
+        let difference = diff((await cNote.balanceOf(user2.address)).toBigInt(), (BigInt(3000000e18) * BigInt(1e18) / exchangeRate));
+        expect(difference < 1e9);
     })
 });

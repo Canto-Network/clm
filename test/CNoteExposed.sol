@@ -8,11 +8,11 @@ import "src/NoteInterest.sol";
 
 
 contract CNoteExposed is CNote {
-    function doTransferInExposed(address from, uint amount) external returns(uint) {
+    function doTransferInExposed(address from, uint amount) external nonReentrant returns(uint) {
         return super.doTransferIn(from, amount);
     }
 
-    function doTransferOutExposed(address payable to, uint amount) external {
+    function doTransferOutExposed(address payable to, uint amount) external nonReentrant{
         super.doTransferOut(to, amount);
     }
 }

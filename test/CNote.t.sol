@@ -5,20 +5,26 @@ import "./utils.sol";
 import "src/CErc20Delegator.sol";
 import "src/InterestRateModel.sol";
 import "./CNoteExposed.sol";
+import "src/NoteInterest.sol";
 
-contract CNoteTest is Test{ // inherit functionality of cNote enables us to call internal methods
+contract CNoteTest is Test, Helpers { // inherit functionality of cNote enables us to call internal methods
     CNoteExposed cNote;
     MaliciousNote Note;
+    NoteRateModel noteInterest;
     address public admin = address(1);
     function setUp() public {
+        vm.startPrank(admin);
         Note = new MaliciousNote("note", "note", 0, 18);
         CNoteExposed cNote_ = new CNoteExposed(); // construct cNote contract 
-         
+        noteInterest = new NoteRateModel(0);
+
+        setUpComptroller();
+
         bytes memory data; 
         CErc20Delegator cNoteDelegator = new CErc20Delegator(   
             address(Note),
-            ComptrollerInterface(address(1)), // we will be bypassing Comptroller / InterestRateModel functionality
-            InterestRateModel(address(1)),
+            comptroller_, // we will be bypassing Comptroller / InterestRateModel functionality
+            noteInterest,
             1,
             "cNOTE",
             "cNote",
@@ -29,12 +35,15 @@ contract CNoteTest is Test{ // inherit functionality of cNote enables us to call
         );
 
         // instantiate CNote interface at the Delegator's address
-        cNote = CNote(address(cNoteDelegator));
+        cNote = CNoteExposed(address(cNoteDelegator));
         cNote.setAccountantContract(address(2)); // instantiate Fake Accountant Contract
+        Note.setCNote(address(cNoteDelegator));
+        vm.stopPrank();
     }
 
     function test_ReEntrance() public {
         // call do transferIn to Trigger re-entrant transferFrom in MaliciousNote contract
-        cNote.doTransferIn(admin, 0);
+        vm.expectRevert(bytes("re-entered"));
+        cNote.doTransferInExposed(admin, 0);
     }
 }

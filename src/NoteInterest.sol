@@ -4,7 +4,6 @@ pragma solidity ^0.8.10;
 import "./PriceOracle.sol";
 import "./SafeMath.sol";
 import "./CErc20.sol";
-
 /**
   * @title note's interest rate model contract
   * @author canto
@@ -45,13 +44,10 @@ contract NoteRateModel is InterestRateModel{
      * @notice The level of aggressiveness to adjust interest rate according to twap's deviation from the peg
      */
     uint public adjusterCoefficient; // set by admin, default 1
-
-    uint public dolValue;
-
     /**
      * @notice The frequency of updating Note's base rate
      */
-    uint public updateFrequency = 21600; // set by admin, default 6 hours
+    uint public updateFrequency = 2160; // set by admin, default 6 hours = 216000 seconds / 6 secs per block
 
     PriceOracle public oracle;
 
@@ -157,15 +153,18 @@ contract NoteRateModel is InterestRateModel{
         uint deltaBlocks = blockNumber - lastUpdateBlock;
         if (deltaBlocks > updateFrequency) {
             uint twapMantissa = oracle.getUnderlyingPrice(cUsdc) / scale; // returns price as mantissa / scale to 18 decimals, by (1e12)
-
             uint notePrice = BASE * BASE/ twapMantissa; // Price of Note in USDC is 1/ (PRice of UDSC in Note)
 
             uint diff = (BASE >= notePrice) ? BASE - notePrice : notePrice - BASE; //difference between price of USDC and expected Price (in note)
             uint interestAdjust = (diff * adjusterCoefficient)/BASE; // these values are both scaled by 1e18
 
-            uint newBaseRatePerYear = interestAdjust + baseRatePerYear;
+            uint newBaseRatePerYear;
             if (notePrice > BASE) {
-                newBaseRatePerYear = (interestAdjust >= baseRatePerYear) ? newBaseRatePerYear : 0;
+                // note is over-performing the dollar defer to borrowers: decrease borrowRate (have users borrow note, swap for usdc)
+                newBaseRatePerYear = (interestAdjust <= baseRatePerYear) ? baseRatePerYear - interestAdjust : 0; 
+            } else { 
+                // note is under-performing the dollar, defer to suppliers: increase the supply rate (have users swap usdc for note to supply it)
+                newBaseRatePerYear = interestAdjust + baseRatePerYear; 
             }
 
             baseRatePerYear = newBaseRatePerYear;
@@ -207,7 +206,7 @@ contract NoteRateModel is InterestRateModel{
     /**
       * @notice Sets the update frequency for Note's interest rate
       * @dev Admin function to set the update frequency
-      * @param newUpdateFrequency The new update frequency, in seconds
+      * @param newUpdateFrequency The new update frequency, in blocks
       */
     function _setUpdateFrequency(uint newUpdateFrequency) external {
         // Check caller is admin

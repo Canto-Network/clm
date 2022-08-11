@@ -10,7 +10,7 @@ async function main() {
 	console.log("Treasury address: ", treasury.address)
 	console.log("Reservoir weth balance: ", (await weth.balanceOf(reservoir.address)).toBigInt())
 
-	data = abiCoder.encode(["address", "uint", "string"], [reservoir.address, ethers.utils.parseEther("100000000"), "CANTO"])
+	data = abiCoder.encode(["address", "uint", "string"], [reservoir.address, ethers.utils.parseEther("1000000"), "CANTO"])
 	console.log(data)
 }
 

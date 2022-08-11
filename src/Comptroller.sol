@@ -9,7 +9,6 @@ import "./ComptrollerStorage.sol";
 import "./Unitroller.sol";
 import "./Governance/Comp.sol";
 import "./WETH.sol";
-
 /**
  * @title Compound's Comptroller Contract
  * @author Compound
@@ -756,7 +755,7 @@ contract Comptroller is ComptrollerV7Storage, ComptrollerInterface, ComptrollerE
             }
             vars.oraclePrice = Exp({mantissa: vars.oraclePriceMantissa});
 
-            // Pre-compute a conversion factor from tokens -> ether (normalized price value)
+            // Pre-compute a conversion factor from tokens -> note (normalized price value)
             vars.tokensToDenom = mul_(mul_(vars.collateralFactor, vars.exchangeRate), vars.oraclePrice);
             // sumCollateral += tokensToDenom * cTokenBalance
             vars.sumCollateral = mul_ScalarTruncateAddUInt(vars.tokensToDenom, vars.cTokenBalance, vars.sumCollateral);

@@ -142,7 +142,6 @@ const CCantoEth ={
     decimals: "18",
     InterestRateModel: "JumpRate",   
     CollateralFactor: "0",
-    becomeImplementation: [],
     compBorrowSpeed: "0",
     compSupplySpeed: "0",
     liquidationIncentive: ethers.utils.parseUnits("0.1", "18"),

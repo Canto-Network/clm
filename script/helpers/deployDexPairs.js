@@ -1,17 +1,22 @@
 const {ethers, deployments} = require("hardhat");
 const { address, etherMantissa } = require('../../tests/Utils/Ethereum');
 
-  async function main() {
+const USDC_ADDRESS = "0x80b5a32E4F032B2a058b4F29EC95EEfEEB87aDcd"
+const USDT_ADDRESS = "0xd567B3d7B8FE3C79a1AD8dA978812cfC4Fa05e75"
+const ATOM_ADDRESS = "0x5FD55A1B9FC24967C4dB09C513C3BA0DFa7FF687"
+const ETH_ADDRESS = "0xecEEEfCEE421D8062EF8d6b4D814efe4dc898265"
+
+async function main() {
     const [dep] = await ethers.getSigners();
     const half = etherMantissa(0.5);
 
 
     const deployer = dep.address;
-    const USDC = await ethers.getContract("USDC");
     const Note = await ethers.getContract("Note");
-    const USDT = await ethers.getContract("USDT");
-    const ATOM = await ethers.getContract("ATOM");
-    const ETH = await ethers.getContract("ETH");
+    const USDC = await ethers.getContractAt("ERC20", USDC_ADDRESS);
+    const USDT = await ethers.getContractAt("ERC20", USDT_ADDRESS);
+    const ATOM = await ethers.getContractAt("ERC20", ATOM_ADDRESS);
+    const ETH = await ethers.getContractAt("ERC20", ETH_ADDRESS);
     const WETH = await ethers.getContract("WETH");
 
     const tokens = [USDC, Note, USDT, ATOM, ETH, WETH] 
@@ -34,17 +39,17 @@ const { address, etherMantissa } = require('../../tests/Utils/Ethereum');
 
     console.log("cUsdc symbol: ", await cUSDC.symbol())
 
-    // await (await Unitroller._supportMarket(cUSDC.address)).wait();
-    // (await Unitroller.enterMarkets([cUSDC.address])).wait()
-    // await (await Unitroller._supportMarket(cNote.address)).wait();
-    // await (await Unitroller._setCollateralFactor(cUSDC.address, half.toString())).wait();
-    // await (await USDC.approve(cUSDC.address, "10000000000000000000000000")).wait()
-    // await (await cUSDC.mint(ethers.utils.parseUnits("5000000", "6"))).wait()
+    await (await Unitroller._supportMarket(cUSDC.address)).wait();
+    (await Unitroller.enterMarkets([cUSDC.address])).wait()
+    await (await Unitroller._supportMarket(cNote.address)).wait();
+    await (await Unitroller._setCollateralFactor(cUSDC.address, half.toString())).wait();
+    await (await USDC.approve(cUSDC.address, "10000000000000000000000000")).wait()
+    await (await cUSDC.mint(ethers.utils.parseUnits("5000000", "6"))).wait()
     console.log("borrowing note")
     console.log("note balance: ", (await Note.balanceOf(deployer)).toBigInt())
-    // await (await cNote.borrow(ethers.utils.parseUnits("1000000", "18"))).wait()
+    await (await cNote.borrow(ethers.utils.parseUnits("1000000", "18"))).wait()
     console.log("borrow complete")
-    // await (await WETH.deposit({value: ethers.utils.parseUnits("50000", "18") })).wait()
+    await (await WETH.deposit({value: ethers.utils.parseUnits("50000", "18") })).wait()
 
    
     await addLiquidity(Note, WETH, oracle, deployer, false);
@@ -52,8 +57,6 @@ const { address, etherMantissa } = require('../../tests/Utils/Ethereum');
     await addLiquidity(WETH, ATOM, oracle, deployer, false);
     await addLiquidity(Note, USDC, oracle, deployer, true);
     await addLiquidity(Note, USDT, oracle, deployer, true);
-    // await addLiquidity(Note, ATOM, oracle, deployer, false);
-    // await addLiquidity(Note, ETH, oracle, deployer, false);
     console.log(await BaseV1Factory.allPairs(0));
     console.log(await BaseV1Factory.allPairs(1));
     console.log(await BaseV1Factory.allPairs(2));
@@ -68,8 +71,7 @@ const { address, etherMantissa } = require('../../tests/Utils/Ethereum');
       await swapTokens(WETH, ATOM, oracle, deployer, false);
       await swapTokens(Note, USDC, oracle, deployer, true);
       await swapTokens(Note, USDT, oracle, deployer, true);
-      // await swapTokens(Note, ATOM, oracle, deployer, false);
-      // await swapTokens(Note, ETH, oracle, deployer, false);
+
     }
   }
 

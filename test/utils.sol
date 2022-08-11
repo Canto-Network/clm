@@ -53,11 +53,13 @@ contract TestPriceOracle is PriceOracle {
 
 
 abstract contract Helpers is Test {
-    Comptroller public comptroller_ = new Comptroller();
-    Unitroller public unitroller_ = new Unitroller();
+    Comptroller public comptroller_;
+    Unitroller public unitroller_ ;
     // BaseV1Factory public factory_ = new BaseV1Factory();
 
     function setUpComptroller() internal {
+        comptroller_ = new Comptroller();
+        unitroller_ = new Unitroller();
         unitroller_._setPendingImplementation(address(comptroller_));
         comptroller_._become(unitroller_);
     }

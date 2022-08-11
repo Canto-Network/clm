@@ -21,7 +21,7 @@ describe("Stable coin mechanism tests", async () => {
     before("Setup" , async () => { 
         [dep] = await ethers.getSigners(); 
         namedAccounts = await getNamedAccounts();
-        await deployments.fixture("Accountant");
+        await deployments.fixture("Protocol");
         let unitroller = await ethers.getContract("Unitroller"); 
         Comptroller = new ethers.Contract(
             (await deployments.get("Unitroller")).address,

@@ -4,8 +4,6 @@ import {canto} from "../../config/index.js";
 
 const CCANTO_ADDRESS = "0xC5339f9a4b5e9109D11589f2D1E456Eb518Fc983"
 const CETH_ADDRESS = "0xfEa72fD487B97F81d001DcC71ce2F732E5FefD17"
-const CUSDT_ADDRESS = "0x6bf99F7F965dbA4B83AEcc277E55211fac0b7452"
-
 
 const func: DeployFunction = async function(hre: HardhatRuntimeEnvironment) {
     const {ethers, deployments, getNamedAccounts} = hre;
@@ -34,7 +32,7 @@ const func: DeployFunction = async function(hre: HardhatRuntimeEnvironment) {
     let cUsdt = await ethers.getContract("CUsdtDelegator")
     
     //retreive addresses of cToken delegators that have not been redeployed
-    let cCanto = await ethers.getContractAt("CCanto", CCANTO_ADDRESS, etherDep)
+    let cCanto = await ethers.getContractAt("CEther", CCANTO_ADDRESS, etherDep)
     let cEth = await ethers.getContractAt("CErc20Delegator", CETH_ADDRESS, etherDep)
     
     let cCantoNote = await ethers.getContract("CCantoNoteDelegator")

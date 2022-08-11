@@ -16,11 +16,11 @@ describe("Delegate Calls to Accountant/Treasury", function() {
     });
     
     describe("Test Call Delegation with Unitroller", async function() { 
-        deployer = await ethers.provider.getSigner(dep);
+        deployer = ethers.provider.getSigner(dep);
         //obtain refs to deployment fixtures: Comptroller and Unitroller, instantiate ethers signer for deployer 
         before(async function()  {
-            //dep = await ethers.provider.getSigner(deployer);
-            await deployments.fixture("Comptroller");
+            // dep = await ethers.provider.getSigner(deployer);
+            await deployments.fixture("Protocol");
             Comptroller = await ethers.getContract("Comptroller");
             Unitroller = await ethers.getContract("Unitroller");
             await Unitroller.deployed();

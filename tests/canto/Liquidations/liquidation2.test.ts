@@ -196,6 +196,19 @@ describe("Testing CNote exchange rate with redeems", async () => {
         expect(diff(acctShortfall, difference) < 1e3).to.be.true
     })
     it("user2 liquidates user1", async () => {
-        
+        // deployer sends user2 300 eth to liquidate user1
+        await (await eth.transfer(user2.address, ethers.utils.parseUnits("300", "18"))).wait()
+        await (await eth.connect(user2).approve(cEth.address, ethers.utils.parseUnits("300", "18"))).wait()
+        // user2 now liquidates user1 for 250 eth
+        await (await comptroller.connect(user2).enterMarkets([cCanto.address, cEth.address])).wait()
+        await (await cEth.connect(user2).liquidateBorrow(user1.address, ethers.utils.parseUnits("200", "18"), cCanto.address)).wait()
+        let numerator = ethers.utils.parseUnits("0.1", "18").toBigInt() * ethPrice / BigInt(1e18)
+        let exchangeRate = (await cCanto.exchangeRateStored()).toBigInt()
+        let denom = BigInt(cantoPrice) * BigInt(exchangeRate) / BigInt(1e18)
+        let frac = numerator * BigInt(1e18) / denom
+        let expected = ethers.utils.parseUnits("200", "18").toBigInt() * BigInt(frac) / BigInt(1e18)
+        let expectedSeize = expected * BigInt(97.2e16) / BigInt(1e18)
+        let cCantoBal = (await cCanto.balanceOf(user2.address)).toBigInt()
+        expect(cCantoBal == expectedSeize).to.be.true
     })
 });

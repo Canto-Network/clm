@@ -2,8 +2,8 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
 import {canto} from "../../config/index.js";
 
-const CCANTO_ADDRESS = "0xC5339f9a4b5e9109D11589f2D1E456Eb518Fc983"
-const CETH_ADDRESS = "0xfEa72fD487B97F81d001DcC71ce2F732E5FefD17"
+const CCANTO_ADDRESS = "0xB65Ec550ff356EcA6150F733bA9B954b2e0Ca488"
+const CETH_ADDRESS = "0x830b9849e7d79b92408a86a557e7baaacbec6030"
 
 const func: DeployFunction = async function(hre: HardhatRuntimeEnvironment) {
     const {ethers, deployments, getNamedAccounts} = hre;
@@ -45,7 +45,6 @@ const func: DeployFunction = async function(hre: HardhatRuntimeEnvironment) {
     await (await comptroller._supportMarket(cNote.address)).wait()
     await (await comptroller._setCollateralFactor(cNote.address, markets.CNote.CollateralFactor)).wait() // set the collateral factor for cNote
     await (await comptroller._setCompSpeeds ([cNote.address], [markets.CNote.compSupplySpeed], [markets.CNote.compBorrowSpeed])).wait()
-    await (await comptroller._setCloseFactor(markets.CNote.liquidationIncentive)).wait() // set the close Factor
     await (await comptroller._setMarketBorrowCaps([cNote.address], [markets.CNote.borrowCap])).wait() //set the BorrowCap For this market
     console.log("CNote configured")
     

@@ -4,11 +4,11 @@ import {canto} from "../../config/index.js";
 
 
 const USDC_ADDRESS = "0x80b5a32E4F032B2a058b4F29EC95EEfEEB87aDcd"
-const ETH_ADDRESS = "0xecEEEfCEE421D8062EF8d6b4D814efe4dc898265"
-const ATOM_ADDRESS = "0x5FD55A1B9FC24967C4dB09C513C3BA0DFa7FF687"
+const ETH_ADDRESS = "0x5FD55A1B9FC24967C4dB09C513C3BA0DFa7FF687"
+const ATOM_ADDRESS = "0xecEEEfCEE421D8062EF8d6b4D814efe4dc898265"
 const USDT_ADDRESS = "0xd567B3d7B8FE3C79a1AD8dA978812cfC4Fa05e75"
 // retrieve weth address on update to reference previously deployed contract
-const WETH_ADDRESS = "0xc38385D9716A89FD8d29CbecbC0e789b8b6F23e8"
+const WETH_ADDRESS = "0x826551890Dc65655a0Aceca109aB11AbDbD7a07B"
 
 const func: DeployFunction = async function(hre: HardhatRuntimeEnvironment) {
     const {ethers, deployments, getNamedAccounts} = hre;
@@ -53,8 +53,8 @@ const func: DeployFunction = async function(hre: HardhatRuntimeEnvironment) {
     let cantoAtomAddr = await read(`BaseV1Factory`, `getPair`, weth.address, ATOM_ADDRESS, false)
     
     console.log("note/canto pair address: ", noteCantoAddr)
-    console.log("note/usdt pair address: ", noteUSDCAddr)
-    console.log("note/usdc pair address: ", noteUSDTAddr)
+    console.log("note/usdc pair address: ", noteUSDCAddr)
+    console.log("note/usdt pair address: ", noteUSDTAddr)
     console.log("canto/eth pair address: ", cantoETHAddr)
     console.log("canto/atom pair address: ", cantoAtomAddr)
 

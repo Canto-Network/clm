@@ -2,7 +2,7 @@ const {ethers} = require("hardhat");
 
 const CNote = {
     initialExchangeRateMantissa: ethers.utils.parseUnits("1", "18"),
-    name: "CNote",
+    name: "cNote",
     symbol: "cNOTE",
     decimals: "18",
     InterestRateModel: "NoteRateModel",
@@ -17,7 +17,7 @@ const CNote = {
 
 const CCanto = {
     initialExchangeRateMantissa: ethers.utils.parseUnits("1", "18"),
-    name: "CCanto",
+    name: "cCanto",
     symbol: "cCANTO",
     decimals: "18",
     InterestRateModel: "JumpRate",   
@@ -32,7 +32,7 @@ const CCanto = {
 
 const CEth = {
     initialExchangeRateMantissa: ethers.utils.parseUnits("1", "18"),
-    name: "CEth",
+    name: "cEth",
     symbol: "cETH",
     decimals: "18",
     InterestRateModel: "JumpRate",   
@@ -47,7 +47,7 @@ const CEth = {
 
 const CAtom = {
     initialExchangeRateMantissa: ethers.utils.parseUnits("1", "18"),
-    name: "CAtom",
+    name: "cAtom",
     symbol: "cATOM",
     decimals: "6",
     InterestRateModel: "JumpRate",   
@@ -62,7 +62,7 @@ const CAtom = {
 
 const CUsdc = {
     initialExchangeRateMantissa: ethers.utils.parseUnits("1", "18"),
-    name: "CUsdc",
+    name: "cUSDC",
     symbol: "cUSDC",
     decimals: "6",
     InterestRateModel: "JumpRate",   
@@ -77,7 +77,7 @@ const CUsdc = {
 
 const CUsdt = {
     initialExchangeRateMantissa: ethers.utils.parseUnits("1", "18"),
-    name: "CUsdt",
+    name: "cUSDT",
     symbol: "cUSDT",
     decimals: "6",
     InterestRateModel: "JumpRate",   
@@ -92,8 +92,8 @@ const CUsdt = {
 
 const CNoteUsdc = {
     initialExchangeRateMantissa: ethers.utils.parseUnits("1", "18"),
-    name: "CNote/USDC",
-    symbol: "cNOTE/USDC",
+    name: "c-LP Note/USDC", // c-LP Note/USDC
+    symbol: "cNOTE/USDC", 
     decimals: "18",
     InterestRateModel: "JumpRate",   
     CollateralFactor: "0",
@@ -107,7 +107,7 @@ const CNoteUsdc = {
 
 const CNoteUsdt = {
     initialExchangeRateMantissa: ethers.utils.parseUnits("1", "18"),
-    name: "CNote/USDT",
+    name: "c-LP Note/USDT",
     symbol: "cNOTE/USDT",
     decimals: "18",
     InterestRateModel: "JumpRate",   
@@ -122,7 +122,7 @@ const CNoteUsdt = {
 
 const CCantoAtom = {
     initialExchangeRateMantissa: ethers.utils.parseUnits("1", "18"),
-    name: "CCanto/ATOM",
+    name: "c-LP Canto/Atom",
     symbol: "cCANTO/ATOM",
     decimals: "18",
     InterestRateModel: "JumpRate",   
@@ -137,7 +137,7 @@ const CCantoAtom = {
 
 const CCantoEth ={ 
     initialExchangeRateMantissa: ethers.utils.parseUnits("1", "18"),
-    name: "CCanto/ETH",
+    name: "c-LP Canto/Eth",
     symbol: "cCANTO/ETH",
     decimals: "18",
     InterestRateModel: "JumpRate",   
@@ -152,7 +152,7 @@ const CCantoEth ={
 
 const CCantoNote = {
     initialExchangeRateMantissa: ethers.utils.parseUnits("1", "18"),
-    name: "CCanto/NOTE",
+    name: "c-LP Canto/Note", // cCanto/Note
     symbol: "cCANTO/NOTE",
     decimals: "18",
     InterestRateModel: "JumpRate",   

@@ -11,7 +11,7 @@ const func: DeployFunction = async function(hre: HardhatRuntimeEnvironment) {
     const Timelock = await deploy("Timelock", {
         from: deployer, 
         log: true,
-        args: [deployer, canto.timelockDelay] //currently 100 secs, changed in config files
+        args: [deployer, canto.timelockDelay] //currently 3600 secs, changed in config files
     }); 
 
     // deploy governor bravo delegate

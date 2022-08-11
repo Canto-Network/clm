@@ -7,8 +7,6 @@ const canto = {
     migrateAdmin: true,
     timelockDelay: 3600, // 1 hour delay for Timelock
     dripRate: "143777317700000000000",
-    LiquidationIncentive: "1250000000000000000",
-    CloseFactor: "1000000000000000000"
 };
 
 const hardhat = {

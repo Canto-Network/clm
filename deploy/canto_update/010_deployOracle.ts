@@ -1,7 +1,7 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
 
-const WETH_ADDRESS = "0xc38385D9716A89FD8d29CbecbC0e789b8b6F23e8";
+const WETH_ADDRESS = "0x826551890Dc65655a0Aceca109aB11AbDbD7a07B";
 
 const func: DeployFunction = async function(hre: HardhatRuntimeEnvironment) {
     const {ethers, deployments, getNamedAccounts} = hre;

@@ -1161,7 +1161,7 @@ contract Comptroller is ComptrollerV7Storage, ComptrollerInterface, ComptrollerE
     function setCompSpeedInternal(CToken cToken, uint supplySpeed, uint borrowSpeed) internal {
         Market storage market = markets[address(cToken)];
         require(market.isListed, "comp market is not listed");
-
+        
         if (compSupplySpeeds[address(cToken)] != supplySpeed) {
             // Supply speed updated so let's update supply state to ensure that
             //  1. COMP accrued properly for the old speed, and

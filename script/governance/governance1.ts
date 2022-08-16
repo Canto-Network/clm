@@ -1,6 +1,9 @@
 import {ethers, deployments} from "hardhat";
 import {Contract} from "ethers";
 
+let CETH_ADDRESS = "0x4069803F7065e81F16FEb502d1624E866D3ee73b"
+let CCANTO_ADDRESS = "0xC5cfB37851E78C65a89de90e6488289F2d8A4380"
+
 async function main() { 
   const [dep] = await ethers.getSigners();
   let governorDelegator = await deployments.get("GovernorBravoDelegator")
@@ -18,16 +21,12 @@ async function main() {
   //cTokens
   let cAtom = await ethers.getContract("CAtomDelegator")
   let cUsdc = await ethers.getContract("CUsdcDelegator")
-  let cEth = await ethers.getContract("CETHDelegator")
+  let cEth = await ethers.getContractAt("CErc20", CETH_ADDRESS)
   let cNote = await ethers.getContract("CNoteDelegator")
-  let cCanto = await ethers.getContract("CCanto")
-  let cCantoNote = await ethers.getContract("CCantoNoteDelegator")
-  let cCantoEth = await ethers.getContract("CCantoEthDelegator")
-  let cCantoAtom = await ethers.getContract("CCantoAtomDelegator")
-  let cNoteUsdc = await ethers.getContract("CNoteUsdcDelegator")
-  let cNoteUsdt = await ethers.getContract("CNoteUsdtDelegator")
+  let cCanto = await ethers.getContractAt("CEther", CCANTO_ADDRESS)
+  let cUsdt = await ethers.getContract("CUsdtDelegator")
 
-  let tokens : Contract[] = [cAtom, cUsdc, cEth, cNote, cCanto]
+  let tokens : Contract[] = [cAtom, cUsdc, cUsdt, cEth, cNote, cCanto]
 
 
   //instantiate delegators
@@ -65,11 +64,12 @@ async function main() {
   await (await noteRate.setAdmin(timelock.address)).wait()
   await (await factory.setAdmin(timelock.address)).wait()
   await (await router.setAdmin(timelock.address)).wait()
+  console.log(`auxiliary admin set`)
 
   //queue GovShuttle Proposal
-  await (await governor.queue(1)).wait()
+  await (await governor.queue(2)).wait()
   await delay(100 * 1000) // await 100 secs, delay in timelock is 60 secs
-  await (await governor.execute(1)).wait()
+  await (await governor.execute(2)).wait()
 
 
   console.log("Governor Admin: ", await governor.admin())

@@ -104,7 +104,7 @@ contract AccountantDelegate is AccountantInterface, ExponentialNoError, TokenErr
 			revert SenderNotCNote(address(cnote));
 		}
 		emit AcctRedeemed(amount);
-		return cnote.redeemUnderlying(amount); // redeem the amount of Note calculated via current CNote -> Note exchange rate
+		return cnote.redeemUnderlying(amount); // redeem the amount of Note calculated via current CNote exchange rate
     }
 
 

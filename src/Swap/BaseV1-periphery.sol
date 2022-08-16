@@ -581,7 +581,7 @@ contract BaseV1Router01 is PriceOracle {
         for(uint i; i < 8; ++i) {
             uint token0TVL = assetReserves[i] * (prices[i] / decimals);
             uint token1TVL = unitReserves[i]; // price of the unit asset is always 1
-            LpPricesCumulative += (token0TVL + token1TVL) * 1e18 / supply[i];  
+            LpPricesCumulative += (token0TVL + token1TVL) * 1e18 / supply[i];
         }
         uint LpPrice = LpPricesCumulative / 8; // take the average of the cumulative prices 
         

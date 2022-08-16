@@ -117,8 +117,7 @@ const func: DeployFunction = async function(hre: HardhatRuntimeEnvironment) {
         "cUSDC",
         markets.CUsdc.decimals,
         deployer, //admin
-        cUsdc.address, //implementation
-        
+        cUsdc.address, //implementation 
         markets.CNote.becomeImplementation, //data for _becomeImplementationdata
     ];
 

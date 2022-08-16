@@ -35,7 +35,7 @@ describe("Test that cNote market can be deprecated by setting the accountant to 
             dep
             );
         NoteRateModel = await deployments.get("NoteRateModel");
-        CNote_ = await ethers.getContract("CErc20Delegator");
+        CNote_ = await ethers.getContract("CNoteDelegator");
         CCanto = await ethers.getContract("CEther");
         PriceOracle = await ethers.getContract("SimplePriceOracle");
         Accountant = await ethers.getContract("AccountantDelegator"); 
@@ -46,8 +46,9 @@ describe("Test that cNote market can be deprecated by setting the accountant to 
     });
    
     describe("Check that the cNote's accountant can be set to the zero address", async () => {
-        it("", async () => {
-            
+        it("Deployer cannot change Note Accountant", async () => {
+            // check that the admin of Note is the accountant
+            expect((await Note.accountant()) == Accountant.address).to.be.true;
         });
     }); 
 });

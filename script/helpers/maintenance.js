@@ -27,6 +27,9 @@ async function main() {
 	console.log(`cCanto totalsupply: ${(await cCanto.totalSupply()).toBigInt()}`)	
 	console.log(`cCanto totalBorrows: ${(await cCanto.totalBorrows()).toBigInt()}`)
 	
+	console.log(`Note: ${(await deployments.get("Note")).address}`)
+	let router = await ethers.getContract("BaseV1Router01")
+
 	// comptroller markets data
 	for (var i = 0; i < 11; i++) {
 		let tokenAddr = await comptroller.allMarkets(i)
@@ -36,16 +39,19 @@ async function main() {
 		console.log(`${await cToken.name()} market: ${await comptroller.markets(tokenAddr)}`)
 		console.log(`${await cToken.name()} supplySpeed: ${(await comptroller.compSupplySpeeds(tokenAddr)).toBigInt()}`)
 		console.log(`${await cToken.name()} borrowSpeed: ${(await comptroller.compBorrowSpeeds(tokenAddr)).toBigInt()}`)
+		console.log(`${await cToken.name()} borrowRate: ${(await cToken.borrowRatePerBlock()).toBigInt()}`)
+		console.log(`${await cToken.name()} supplyRate: ${(await cToken.supplyRatePerBlock()).toBigInt()}`)
 		console.log(`${await cToken.name()} interest rate model: ${await cToken.interestRateModel()} `)
 		console.log(`${await cToken.name()} totalSupply: ${(await cToken.totalSupply()).toBigInt()}`)
 		console.log(`${await cToken.name()} totalBorrows: ${(await cToken.totalBorrows()).toBigInt()}`)
 		console.log(`${await cToken.name()} exchangeRate: ${(await cToken.exchangeRateStored()).toBigInt()}`)
+		console.log(`${await cToken.name()} getCash: ${(await cToken.getCash()).toBigInt()}`)
+		console.log(`${await cToken.name()} current price; ${(await router.getUnderlyingPrice(tokenAddr)).toBigInt()}`)
 		console.log(`\n\n`)
 	}
 
 	// check addresses of pairs
 	let factory = await ethers.getContract("BaseV1Factory")
-	let router = await ethers.getContract("BaseV1Router01")
 	
 	let note = await deployments.get("Note")
 
@@ -54,17 +60,23 @@ async function main() {
 	console.log(`router wcanto address: ${await router.wcanto()} deployment: ${WETH_ADDRESS}`)
 	console.log(`router usdc stable: ${await router.isStable(USDC_ADDRESS)}`)
 	console.log(`router usdt stable: ${await router.isStable(USDT_ADDRESS)}`)
-
+	console.log("router address: ", )
 
 	let allPairsLength = (await factory.allPairsLength()).toBigInt()
 	for (var i = 0; i < allPairsLength; i++) {
 		let pairAddr = await factory.allPairs(i);
+
 		let pair = await ethers.getContractAt("BaseV1Pair", pairAddr)
 		console.log(`${await pair.name()} symbol: ${await pair.symbol()}`)
 		console.log(`${await pair.name()} token0: ${await pair.token0()}`)
 		console.log(`${await pair.name()} token1: ${await pair.token1()}`)
+		console.log(`${await pair.name()} totalSupply: ${(await pair.totalSupply()).toBigInt()}`)
+		console.log(`${await pair.name()} reserves0: ${(await pair.reserve0()).toBigInt()}`)
+		console.log(`${await pair.name()} reserves1: ${(await pair.reserve1()).toBigInt()}`)
 		console.log(`${await pair.name()} stable" ${await pair.stable()}`)
 		console.log(`${await pair.name()} periodSize: ${await pair.periodSize()}`)		
+		console.log(`${await pair.name()} address: ${pairAddr}`)
+		console.log(`${await pair.name()} observationLength: ${await pair.observationLength()}`)
 	}
 }
 

@@ -397,7 +397,7 @@ describe("Reservoir Tests", async () => {
                 9999999999999
             )
 
-            for (var i = 0; i < 30;++i) {
+            for (var i = 0; i < 4;++i) {
                 await (await oracle.swapExactTokensForTokensSimple(
                     ethers.utils.parseUnits("1", "5"), 
                     0, 

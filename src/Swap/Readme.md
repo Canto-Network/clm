@@ -1,5 +1,5 @@
 # Oracle Audit
-## Total LOC: 163
+## Total LOC: 155
 
 # BaseV1-Periphery
 

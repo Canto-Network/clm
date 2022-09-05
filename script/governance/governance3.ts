@@ -8,6 +8,9 @@ async function main() {
     let governorDelegate = await deployments.get("GovernorBravoDelegate")
     let timelock = await ethers.getContract("Timelock")
     let unitroller = await ethers.getContractAt("Comptroller", (await deployments.get("Unitroller")).address)
+    let treasury = await ethers.getContract("TreasuryDelegator")
+    let reservoir = await ethers.getContract("Reservoir")
+    let wcanto = await ethers.getContractAt("WETH", "0x826551890Dc65655a0Aceca109aB11AbDbD7a07B")
     // lpTokens
     let cUsdc = await ethers.getContract("CUsdcDelegator")
     let cUsdt = await ethers.getContract("CUsdtDelegator")
@@ -20,12 +23,17 @@ async function main() {
 
     //instantiate delegators
     let governor = getDelegator(governorDelegate, governorDelegator, dep)
-
+    console.log(`treasury canto balance: ${(await ethers.provider.getBalance(treasury.address))}`)
+    console.log(`Reservoir wcanto balance: ${(await wcanto.balanceOf(reservoir.address)).toBigInt()}`)
 
     //queue GovShuttle Proposal
-    await (await governor.queue(13)).wait()
+    await (await governor.queue(14)).wait()
+    console.log(`proposal actions: ${await governor.getActions(14)}`)
     await delay(100 * 1000) // await 100 secs, delay in timelock is 60 secs
-    await (await governor.execute(13)).wait()
+    await (await governor.execute(14)).wait()
+
+    console.log(`treasury canto balance: ${(await ethers.provider.getBalance(treasury.address))}`)
+    console.log(`Reservoir wcanto balance: ${(await wcanto.balanceOf(reservoir.address)).toBigInt()}`)
 
     for (var token of tokens){
     // print updated admins of tokens

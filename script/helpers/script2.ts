@@ -1,5 +1,5 @@
-const {ethers} = require("hardhat");
-const {canto} = require("../../config/index");
+import {ethers, deployments} from "hardhat";
+import {Contract} from "ethers";
 
 async function main() { 
 	let abiCoder = ethers.utils.defaultAbiCoder
@@ -17,13 +17,13 @@ async function main() {
 	let cCantoAtom = await ethers.getContract("CCantoAtomDelegator")
 	let cCantoEth = await ethers.getContract("CCantoEthDelegator")
 	let tokens = [
-		"0xdE59F060D7ee2b612E7360E6C1B97c4d8289Ca2e", //cUsdc delegator
-		"0x6b46ba92d7e94FfA658698764f5b8dfD537315A9", // cUsdt delegator
-		"0xD6a97e43FC885A83E97d599796458A331E580800", //cNoteUsdc Delegator 
-		"0xf0cd6b5cE8A01D1B81F1d8B76643866c5816b49F", //cNoteUsdt Delegator
-		"0xC0D6574b2fe71eED8Cd305df0DA2323237322557", //cCantoAtom Delegator 
-		"0xb49A395B39A0b410675406bEE7bD06330CB503E3", //cCantoEth Delegator
-		"0x3C96dCfd875253A37acB3D2B102b6f328349b16B" //cCantoNote Delegator
+		cUsdc.address, //cUsdc delegator
+		cUsdt.address, // cUsdt delegator
+		cNoteUsdc.address, //cNoteUsdc Delegator 
+		cNoteUsdt.address, //cNoteUsdt Delegator
+		cCantoAtom.address, //cCantoAtom Delegator 
+		cCantoEth.address, //cCantoEth Delegator
+		cCantoNote.address //cCantoNote Delegator
 	]
 
 	let supplySpeeds = [
@@ -49,10 +49,10 @@ async function main() {
 
 	console.log(`CUsdc compSupplySpeed: `, (await comptroller.compSupplySpeeds(CUsdc.address)).toBigInt())
 
-	data = abiCoder.encode(["address[]", "uint[]", "uint[]"], [tokens, supplySpeeds , borrowSpeeds])
+	let data = abiCoder.encode(["address[]", "uint[]", "uint[]"], [tokens, supplySpeeds , borrowSpeeds])
 	console.log(data)	
 	// send funds to reservoir call data
-	data = abiCoder.encode(["address","uint256","string"], ["0xCD9A55aa5C890b132700Ef9aA8218Db2F55327d8", ethers.utils.parseUnits("62500000", "18"), "CANTO"])
+	data = abiCoder.encode(["address","uint256","string"], [reservoir.address, ethers.utils.parseUnits("16304348", "18"), "CANTO"])
 	console.log("TreasurySend: ", data)
 }
 

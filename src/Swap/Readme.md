@@ -1,4 +1,5 @@
 # Oracle Audit
+## Total LOC: 163
 
 # BaseV1-Periphery
 
@@ -6,7 +7,7 @@
 
 Given a cToken, references the underlying asset (or Wcanto in the case of CCanto), and returns the TWAP of the spot prices, determined from the last 8 observations made in the Note/underlyingAsset pool. The result from this calculation is scaled by 1e18, to abide by conventions specified for floating point representations in Compound.
 
-## getPriceLP (SLOC: 549 - 593): 104 LOC -
+## getPriceLP (SLOC: 549 - 593): 14 LOC -
 
 Given a cLpToken, that is, a cToken whose underlying asset is an lpToken, returns the TWA of the last 8 observations of the TVL / totalLpReserves. This value is also scaled by 1e18. 
 

@@ -17,12 +17,20 @@ async function main() {
 		(await deployments.get("Comptroller")).abi,
 		dep
 	)
+		
+	let usdc = await ethers.getContractAt('ERC20', USDC_ADDRESS)
 
+	console.log(`balance at ${'0xf60B12aD0d7CD84212d961cDDfF398f679cB3d94'}: ${(await usdc.balanceOf(`0xf60B12aD0d7CD84212d961cDDfF398f679cB3d94`)).toBigInt()}`)
+	
 	let weth = await ethers.getContractAt("WETH", "0x826551890Dc65655a0Aceca109aB11AbDbD7a07B")
 	let reservoir = await ethers.getContract("Reservoir")
 	let timelock = await ethers.getContract("Timelock")
 	console.log(`Comptroller liquidation incentive: ${(await comptroller.liquidationIncentiveMantissa()).toBigInt()}`)
 	console.log(`Comptroller close Factor: ${(await comptroller.closeFactorMantissa()).toBigInt()}`)
+		
+	console.log(`Drip Canto`)
+	await (await reservoir.drip()).wait()
+	console.log(`Canto Dripped`)
 
 	console.log(`Unitroller address: ${(await deployments.get("Unitroller")).address}`)
 	console.log(`GovernorBravoDelegator: ${(await deployments.get("GovernorBravoDelegator")).address}`)
@@ -31,10 +39,10 @@ async function main() {
 	console.log(`Timelock: ${(await timelock.delay()).toBigInt()}`)
 	console.log(`Comptroller WCANTO balance: ${(await weth.balanceOf(comptroller.address)).toBigInt()}`)
 	console.log(`Reservoir Wcanto balance: ${(await weth.balanceOf(reservoir.address)).toBigInt()}`)
-
+	
 	let cCanto = await ethers.getContractAt("CEther", CCANTO_ADDRESS)
 	let cEther = await ethers.getContractAt("CErc20", CETH_ADDRESS)
-		
+	
 
 	console.log(`cCanto totalsupply: ${(await cCanto.totalSupply()).toBigInt()}`)	
 	console.log(`cCanto totalBorrows: ${(await cCanto.totalBorrows()).toBigInt()}`)

@@ -3,6 +3,7 @@ pragma solidity 0.8.11;
 
 import "./BaseV1-libs.sol";
 
+
 interface IBaseV1Callee {
     function hook(address sender, uint amount0, uint amount1, bytes calldata data) external;
 }
@@ -140,7 +141,7 @@ contract BaseV1Pair {
         if (timeElapsed > 0 && _reserve0 != 0 && _reserve1 != 0) {
             reserve0CumulativeLast += _reserve0 * timeElapsed;
             reserve1CumulativeLast += _reserve1 * timeElapsed;
-            totalSupplyCumulativeLast += _totalSupply * timeElapsed; //update totalSupply after each change in LP Token supply 
+            totalSupplyCumulativeLast += totalSupply * timeElapsed; //update totalSupply after each change in LP Token supply 
         }
 
         Observation memory _point = lastObservation();

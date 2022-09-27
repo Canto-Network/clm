@@ -22,9 +22,9 @@ async function main() {
   console.log(`Treasury Balance ${(await ethers.provider.getBalance(treasury.address)).toBigInt()}`)
 
   //queue GovShuttle Proposal
-  await (await governor.queue(9)).wait()
+  await (await governor.queue(15)).wait()
   await new Promise( timeOut => setTimeout(timeOut, 100 * 1000)) // await 100 secs, delay in timelock is 60 secs
-  await (await governor.execute(9)).wait()  //queue GovShuttle Proposal
+  await (await governor.execute(15)).wait()  //queue GovShuttle Proposal
 
   console.log(`Reservoir weth balance ${(await weth.balanceOf(reservoir.address)).toBigInt()}`)
 }     

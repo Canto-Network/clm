@@ -9,10 +9,10 @@ import {canto} from "../../config/index.js";
 // const USDT_ADDRESS = "0xd567B3d7B8FE3C79a1AD8dA978812cfC4Fa05e75"
 
 // temporary addrs
-const USDC_ADDRESS = "0xe10429B347E4a102a7E132C6Ae201afA6FFf2933"
-const ETH_ADDRESS = "0xf82faA433Da491b06587E34779b70B58bd048fb0"
-const ATOM_ADDRESS = "0xe6a0Bd9960ED588823407c2E7529EdcDD35Ba124"
-const USDT_ADDRESS = "0x6bf99F7F965dbA4B83AEcc277E55211fac0b7452"
+const USDC_ADDRESS = "0x80b5a32E4F032B2a058b4F29EC95EEfEEB87aDcd"
+const ETH_ADDRESS = "0xd567B3d7B8FE3C79a1AD8dA978812cfC4Fa05e75"
+const ATOM_ADDRESS = "0x5FD55A1B9FC24967C4dB09C513C3BA0DFa7FF687"
+const USDT_ADDRESS = "0xecEEEfCEE421D8062EF8d6b4D814efe4dc898265"
 
 const func: DeployFunction = async function(hre: HardhatRuntimeEnvironment) {
     const {ethers, deployments, getNamedAccounts} = hre;

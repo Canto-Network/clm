@@ -1,6 +1,6 @@
 import{expect} from "chai"
 import{ethers, deployments, getNamedAccounts} from "hardhat";
-import {min, sqrt, avg, diff} from "./utils"
+import {min, sqrt, avg, diff, percentDiff} from "./utils"
 
 ethers.utils.Logger.setLogLevel(ethers.utils.Logger.levels.ERROR);
 
@@ -30,6 +30,7 @@ describe("Testing LpToken Price Accuracy after large vol moves in Canto/Note pai
 
     let accountantCNoteBalance: any;
     before(async() => {
+        // retrieve contracts from the deployment
         dep  = await getNamedAccounts();
         [dep, user1, user2] = await ethers.getSigners();
         await deployments.fixture(["Protocol"]);
@@ -79,25 +80,29 @@ describe("Testing LpToken Price Accuracy after large vol moves in Canto/Note pai
         await (await comptroller.enterMarkets([cUsdc.address, cNote.address])).wait()
         await (await usdc.approve(cUsdc.address, ethers.utils.parseUnits("1000"))).wait()
         // supply usdc
-        await (await cUsdc.mint(ethers.utils.parseUnits("100000000", "6"))).wait()
+        await (await cUsdc.mint(ethers.utils.parseUnits("100000000000000", "6"))).wait()
         // borrow note
-        await (await cNote.borrow(ethers.utils.parseUnits("9000000", "18"))).wait()
-        expect((await note.balanceOf(dep.address)).toBigInt() == ethers.utils.parseUnits("9000000", "18").toBigInt()).to.be.true
+        await (await cNote.borrow(ethers.utils.parseUnits("9000000000000", "18"))).wait()
+        expect((await note.balanceOf(dep.address)).toBigInt() == ethers.utils.parseUnits("9000000000000", "18").toBigInt()).to.be.true
     })
+
     it("Deployer adds 1 canto and 1000 note to pool", async () => {
         // add liquidity to router
         let noteIn = ethers.utils.parseUnits("1000", "18")
         let cantoIn = ethers.utils.parseUnits("1", "18")
         //approve note transfer by router
+        await (await weth.deposit({value: ethers.utils.parseUnits("9", "18")}))
         await (await note.approve(router.address, noteIn)).wait()
-        await (await router.addLiquidityCANTO(
+        await (await weth.approve(router.address, cantoIn)).wait()
+        await (await router.addLiquidity(
             note.address,
+            weth.address,
             false,
-            noteIn
-            ,0,0,
+            noteIn,
+            cantoIn,
+            0,0, 
             dep.address,
             9999999999,
-            {value: cantoIn}
             )).wait()
         // get pair address
         let pairAddr = await factory.getPair(note.address, weth.address, false)
@@ -120,8 +125,8 @@ describe("Testing LpToken Price Accuracy after large vol moves in Canto/Note pai
     it("Deployer swaps 10 times to cement observations in the pair", async () => {
         // swap 10 times in pool observe totalSupply/ totalReserves changing periodically and obtain price 
         //approve transfers
-        await (await note.approve(router.address, ethers.utils.parseUnits("10", "18")))
-        for(var i = 0; i < 10; i++) {
+        await (await note.approve(router.address, ethers.utils.parseUnits("13", "18")))
+        for(var i = 0; i < 13; i++) {
             //swap note for canto
             await (await router.swapExactTokensForTokensSimple(
                 ethers.utils.parseUnits("1", "18"),
@@ -130,67 +135,36 @@ describe("Testing LpToken Price Accuracy after large vol moves in Canto/Note pai
                 weth.address,
                 false,
                 dep.address,
-                9999999999999
+                9999999999
             )).wait()
             // update array values
             totalSupplies.push((await pair.totalSupply()).toBigInt())
             reserves0.push((await pair.reserve0()).toBigInt())
             reserves1.push((await pair.reserve1()).toBigInt())
-            // update price samples (amt of note for )
+
+            // update price samples (amt of note for 1e18 canto)
             let cantoPrice = (await pair.getAmountOut(ethers.utils.parseUnits("1", "18"), weth.address)).toBigInt()
             pricesCanto.push(cantoPrice)
             let notePrice = (await pair.getAmountOut(ethers.utils.parseUnits("1", "18"), note.address)).toBigInt()
             pricesNote.push(notePrice)
 
         }
+        console.log("pair token0: ", await pair.token0())
+        console.log("pair token1: ", await pair.token1())
+
+        console.log("weth address: ", weth.address)
+        console.log("note address: ", note.address)
+
         // actual price
         let actualPrice = (await router.getUnderlyingPrice(cCanto.address)).toBigInt()
         // sample does not factor most recent observation into account
-        let expected = avg(pricesCanto, 1) // observations lag behind
+        let expected = BigInt(avg(pricesCanto, 1)) // observations lag behind
         console.log("actualPrice: ", actualPrice) 
         console.log("expected price: ", expected)
         // expect less than 0.1% difference in price (actual Price is TWAP) expected calculation does not weight by time
-        expect(diff(actualPrice, expected)  == BigInt(0)).to.be.true
+        expect(percentDiff(actualPrice, expected) <= 0.01).to.be.true
     })
 
-    let lpTokens: any
-    it("Now the deployer adds an outsize amt to the pool (1000x)", async () => {
-        // add liquidity to router
-        let priorBal = (await pair.balanceOf(dep.address)).toBigInt()
-        // canto is token 0 in this case 
-        let noteIn = ethers.utils.parseUnits("1000000", "18")
-        let cantoIn = ethers.utils.parseUnits("1000", "18")
-        //approve note transfer by router
-        let totalSupply= (await pair.totalSupply()).toBigInt()
-        let reserve0 = (await pair.reserve0()).toBigInt()
-        let reserve1 = (await pair.reserve1()).toBigInt()
-        await (await note.approve(router.address, noteIn)).wait()
-        await (await router.addLiquidityCANTO(
-            note.address,
-            false,
-            noteIn
-            ,0,0,
-            dep.address,
-            9999999999,
-            {value: cantoIn}
-            )).wait()
-        lpTokens = (await pair.balanceOf(dep.address)).toBigInt() - priorBal
-        // now calculate the expected tokens out    
-        let amt0 = (cantoIn.toBigInt() * totalSupply) / reserve0
-        let amt1 = (noteIn.toBigInt() * totalSupply) / reserve1
-        let amtMinted = min(amt0, amt1)
-
-        expect(diff(BigInt(amtMinted),BigInt(lpTokens)) <= 1000).to.be.true;
-        // update array values
-        totalSupplies.push((await pair.totalSupply()).toBigInt())
-        reserves0.push((await pair.reserve0()).toBigInt())
-        reserves1.push((await pair.reserve1()).toBigInt())
-        // update price samples (amt of note for )
-        let cantoPrice = (await pair.getAmountOut(ethers.utils.parseUnits("1", "18"), weth.address)).toBigInt()
-        pricesCanto.push(cantoPrice)
-        let notePrice = (await pair.getAmountOut(ethers.utils.parseUnits("1", "18"), note.address)).toBigInt()
-        pricesNote.push(notePrice)
-    })
     let delegator: any
     it("Now Instantiate the lpToken market and retrieve the price of this asset", async  () => {
         let tokenFac = await ethers.getContractFactory("CErc20Delegate", dep)
@@ -217,23 +191,126 @@ describe("Testing LpToken Price Accuracy after large vol moves in Canto/Note pai
         // calculate expected price of lpToken = avg_i ((reserve_1 + reserve_2 * price_{1->2}) / totalSupply_i) 
         let idx = reserves0.length - 9
         for (var i = idx; i < reserves0.length; i++) { 
-            cumulative[i - idx] = (reserves1[i] * pricesNote[i] + reserves0[i] ) / totalSupplies[i]
+            let reserve1Canto = BigInt(reserves1[i] * pricesNote[i]) / BigInt(1e18)
+            cumulative[i - idx] = BigInt((reserve1Canto + reserves0[i]) * BigInt(1e18) ) / BigInt(totalSupplies[i])
         }
         let expectedCanto = avg(cumulative, 0) 
         let CantoPrice =  (await router.getUnderlyingPrice(cCanto.address)).toBigInt()
-        let expected = expectedCanto * CantoPrice / BigInt(1e18)
+        let expected = BigInt(expectedCanto) * CantoPrice / BigInt(1e18)
         console.log("expected: ", expected)
         console.log("actual Price: ", actualPrice)
-        expect(diff(expected, actualPrice) / actualPrice <= 0.001).to.be.true
+        console.log("percentDiff in price: ", percentDiff(expected, actualPrice))
+        // expect(Number(diff(expected, actualPrice)) / Number(actualPrice) <= 0.001).to.be.true
+        // amount of note in pair, unscaled
         let pairNoteBal = (await note.balanceOf(pair.address)).toBigInt()
+        // amount of weth in the pair, unscaled
         let pairWethBal = (await weth.balanceOf(pair.address)).toBigInt()
+        // total Supply of lpTokens, unscaled
         let totalSupply = (await pair.totalSupply()).toBigInt()
-        let actual = BigInt(totalSupply * actualPrice)
-        console.log("actual: ", actual)
-        expected = pairNoteBal + pairWethBal * CantoPrice
-        console.log("expected: ", expected)
-        expect(diff(expected, actual) / actual <= 0.01).to.be.true
+        // price of lpToken is scaled by 1e18
+        let actual = BigInt(totalSupply * actualPrice) / BigInt(1e18)
+        // price of Canto \-> Note is scaled by 1e18
+        expected = pairNoteBal + BigInt(pairWethBal * CantoPrice) / BigInt(1e18)
+        
+        console.log("actual TVL: ", actual)
+        console.log("expected TVL: ", expected)
 
+        console.log("percentDiff in TVL", percentDiff(actual, expected))
+
+        // expect(Number(diff(expected, actual)) / Number(actual) <= 0.01).to.be.true
+    })
+
+    let lpTokens: any
+    it("Now the deployer adds an outsize amt to the pool (5x)", async () => {
+        // add liquidity to router
+        let priorBal = (await pair.balanceOf(dep.address)).toBigInt()
+        // canto is token 0 in this case 
+        let scale = 1
+        let noteIn = ethers.utils.parseUnits("5000", "18").toBigInt()  * BigInt(scale)
+        let cantoIn = ethers.utils.parseUnits("5", "18").toBigInt() * BigInt(scale)
+        //approve note transfer by router
+        let totalSupply= (await pair.totalSupply()).toBigInt()
+        let reserve0 = (await pair.reserve0()).toBigInt()
+        let reserve1 = (await pair.reserve1()).toBigInt()
+        console.log(`reserve0: ${reserve0}, reserve1: ${reserve1}`)
+        await (await note.approve(router.address, noteIn)).wait()
+        await (await weth.approve(router.address, cantoIn)).wait()
+        await (await router.addLiquidity(
+            note.address,
+            weth.address,
+            false,
+            noteIn,
+            cantoIn
+            ,0,0,
+            dep.address,
+            9999999999,
+            )).wait()
+        lpTokens = (await pair.balanceOf(dep.address)).toBigInt() - priorBal
+        reserve0 = (await pair.reserve0()).toBigInt()
+        reserve1 = (await pair.reserve1()).toBigInt()
+        console.log(`reserve0: ${reserve0}, reserve1: ${reserve1}`)
+        // now calculate the expected tokens out    
+        let amt0 = (BigInt(cantoIn) * totalSupply) / reserve0
+        let amt1 = (BigInt(noteIn) * totalSupply) / reserve1
+        let amtMinted = min(amt0, amt1)
+
+        // expect(percentDiff(amtMinted,lpTokens) <= 0.01).to.be.true;
+        // update array values
+        totalSupplies.push((await pair.totalSupply()).toBigInt())
+        reserves0.push((await pair.reserve0()).toBigInt())
+        reserves1.push((await pair.reserve1()).toBigInt())
+        // update price samples (amt of note for )
+        let cantoPrice = (await pair.getAmountOut(ethers.utils.parseUnits("1", "18"), weth.address)).toBigInt()
+        pricesCanto.push(cantoPrice)
+        let notePrice = (await pair.getAmountOut(ethers.utils.parseUnits("1", "18"), note.address)).toBigInt()
+        pricesNote.push(notePrice)
+    })
+    it("How much has the Canto/Note Price changed by", async () => { 
+        // actual price
+        let actualPrice = (await router.getUnderlyingPrice(cCanto.address)).toBigInt()
+        // sample does not factor most recent observation into account
+        let expected = BigInt(avg(pricesCanto, 2)) // observations lag behind
+        console.log("actualPrice: ", actualPrice) 
+        console.log("expected price: ", expected)
+        // expect less than 0.1% difference in price (actual Price is TWAP) expected calculation does not weight by time
+        expect(percentDiff(actualPrice, expected) <= 0.01).to.be.true
+    })
+
+    it("Get Price of lpToken", async () => {
+        // actual price 
+        let cumulative : Array<any> = new Array<any>()
+        let actualPrice = (await router.getUnderlyingPrice(delegator.address)).toBigInt()
+        // calculate expected price of lpToken = avg_i ((reserve_1 + reserve_2 * price_{1->2}) / totalSupply_i) 
+        let idx = reserves0.length - 9
+        for (var i = idx; i < reserves0.length; i++) { 
+            // token0TVL in terms of Canto
+            let reserve1Canto = BigInt(reserves1[i] * pricesNote[i]) / BigInt(1e18)
+            cumulative[i - idx] = BigInt((reserve1Canto + reserves0[i]) * BigInt(1e18) ) / BigInt(totalSupplies[i])
+        }
+        let expectedCanto = avg(cumulative, 0) 
+        let CantoPrice =  (await router.getUnderlyingPrice(cCanto.address)).toBigInt()
+        let expected = BigInt(expectedCanto) * CantoPrice / BigInt(1e18)
+        console.log("expected: ", expected)
+        console.log("actual Price: ", actualPrice)
+        console.log("percentDiff in price: ", percentDiff(expected, actualPrice))
+        
+        // amount of note in pair, unscaled
+        let pairNoteBal = (await note.balanceOf(pair.address)).toBigInt()
+        // amount of weth in the pair, unscaled
+        let pairWethBal = (await weth.balanceOf(pair.address)).toBigInt()
+        // total Supply of lpTokens, unscaled
+        let totalSupply = (await pair.totalSupply()).toBigInt()
+        // price of lpToken is scaled by 1e18
+        let actual = BigInt(totalSupply * actualPrice) / BigInt(1e18)
+        // price of Canto \-> Note is scaled by 1e18
+        expected = pairNoteBal + BigInt(pairWethBal * CantoPrice) / BigInt(1e18)
+        
+        console.log("actual TVL: ", actual)
+        console.log("expected TVL: ", expected)
+
+        console.log("percentDiff in TVL", percentDiff(actual, expected))
+
+        // expect(Number(diff(expected, actual)) / Number(actual) <= 0.01).to.be.true
     })
     it("Deployer swaps 8 times to cement observations in the pair", async () => {
         // swap 10 times in pool observe totalSupply/ totalReserves changing periodically and obtain price 
@@ -265,22 +342,32 @@ describe("Testing LpToken Price Accuracy after large vol moves in Canto/Note pai
         // sample does not factor most recent observation into account
         let expected = avg(pricesCanto, reserves0.length - 9) // observations lag behind
         // expect less than 0.1% difference in price (actual Price is TWAP) expected calculation does not weight by time
+        console.log(`actual price: ${actualPrice}`)
+        console.log(`expected price: ${expected}`)
         expect(diff(actualPrice, expected)  <= 0.01).to.be.true
     })
     it("Remove liquidity, make swaps", async () => {
         // remove liquidity
         // approve transfer of tokens
+        let scale = 1
+        let reserve0 = (await pair.reserve0()).toBigInt()
+        let reserve1 = (await pair.reserve1()).toBigInt()
+        console.log(`reserve0: ${reserve0}, reserve1: ${reserve1}`)
         await (await pair.approve(router.address, lpTokens)).wait()
-        await (await router.removeLiquidityCANTO(
+        await (await router.removeLiquidity(
             note.address,
+            weth.address,
             false,
-            lpTokens,
+            BigInt(lpTokens)/BigInt(scale),
             0,0,
             dep.address,
             9999999999
         )).wait()
         // write observations
         // update array values
+        reserve0 = (await pair.reserve0()).toBigInt()
+        reserve1 = (await pair.reserve1()).toBigInt()
+        console.log(`reserve0: ${reserve0}, reserve1: ${reserve1}`)
         totalSupplies.push((await pair.totalSupply()).toBigInt())
         reserves0.push((await pair.reserve0()).toBigInt())
         reserves1.push((await pair.reserve1()).toBigInt())
@@ -300,19 +387,31 @@ describe("Testing LpToken Price Accuracy after large vol moves in Canto/Note pai
         // ignore the last observation in the cumulative array
         let idx = reserves0.length - 9
         for (var i = idx; i < reserves0.length; i++) { 
-            cumulative[i - idx] = (reserves1[i] * pricesNote[i] + reserves0[i] ) / totalSupplies[i]
+            let reserve1Canto = BigInt(reserves1[i] * pricesNote[i]) / BigInt(1e18)
+            cumulative[i - idx] = (reserve1Canto + reserves0[i]) * BigInt(1e18) / BigInt(totalSupplies[i])
         } 
-        let expectedCanto = avg(cumulative, 0) 
+        let expectedCanto = avg(cumulative, 0)
         let CantoPrice =  (await router.getUnderlyingPrice(cCanto.address)).toBigInt()
         let expected = expectedCanto * CantoPrice / BigInt(1e18)
-        expect(diff(expected, actualPrice) / actualPrice <= 0.001).to.be.true
+        console.log("percentDiff in price: ", percentDiff(actualPrice, expected))
+        console.log("actual price: ", actualPrice)
+        console.log("expected price: ",expected )
+        
+        // amount of note in pair, unscaled
         let pairNoteBal = (await note.balanceOf(pair.address)).toBigInt()
+        // amount of weth in the pair, unscaled
         let pairWethBal = (await weth.balanceOf(pair.address)).toBigInt()
+        // total Supply of lpTokens, unscaled
         let totalSupply = (await pair.totalSupply()).toBigInt()
-        let actual = BigInt(totalSupply * actualPrice)
-        expected = pairNoteBal + pairWethBal * CantoPrice
-        console.log("actual: ", actual)
-        expect(diff(expected, actual) / actual <= 0.05).to.be.true
+        // price of lpToken is scaled by 1e18
+        let actual = BigInt(totalSupply * actualPrice) / BigInt(1e18)
+        // price of Canto \-> Note is scaled by 1e18
+        expected = pairNoteBal + BigInt(pairWethBal * CantoPrice) / BigInt(1e18)
+        
+        console.log("actual TVL: ", actual)
+        console.log("expected TVL: ", expected)
+
+        console.log("percentDiff in TVL", percentDiff(actual, expected))
     })
     it("Now swap some number of times and see how the price begins to change", async () => {
         // swap 10 times in pool observe totalSupply/ totalReserves changing periodically and obtain price 
@@ -353,19 +452,27 @@ describe("Testing LpToken Price Accuracy after large vol moves in Canto/Note pai
         // calculate expected price of lpToken = avg_i ((reserve_1 + reserve_2 * price_{1->2}) / totalSupply_i) 
         // ignore the last observation in the cumulative array
         let idx = reserves0.length - 9
-        for (var i = idx; i < reserves0.length; i++) { 
-            cumulative[i - idx] = (reserves1[i] * pricesNote[i] + reserves0[i] ) / totalSupplies[i]
+        for (var i = idx; i < reserves0.length; i++) {
+            let reserves1Canto = BigInt(reserves1[i] * pricesNote[i]) / BigInt(1e18)
+            cumulative[i - idx] = (reserves1Canto + reserves0[i] ) * BigInt(1e18) / totalSupplies[i]
         } 
         let expectedCanto = avg(cumulative, 0) 
         let CantoPrice =  (await router.getUnderlyingPrice(cCanto.address)).toBigInt()
         let expected = expectedCanto * CantoPrice / BigInt(1e18)
-        expect(diff(expected, actualPrice) / actualPrice <= 0.001).to.be.true
+        // amount of note in pair, unscaled
         let pairNoteBal = (await note.balanceOf(pair.address)).toBigInt()
+        // amount of weth in the pair, unscaled
         let pairWethBal = (await weth.balanceOf(pair.address)).toBigInt()
+        // total Supply of lpTokens, unscaled
         let totalSupply = (await pair.totalSupply()).toBigInt()
-        let actual = BigInt(totalSupply * actualPrice)
-        expected = pairNoteBal + pairWethBal * CantoPrice
-        console.log("actual: ", actual)
-        expect(diff(expected, actual) / actual <= 0.05).to.be.true
+        // price of lpToken is scaled by 1e18
+        let actual = BigInt(totalSupply * actualPrice) / BigInt(1e18)
+        // price of Canto \-> Note is scaled by 1e18
+        expected = pairNoteBal + BigInt(pairWethBal * CantoPrice) / BigInt(1e18)
+        
+        console.log("actual TVL: ", actual)
+        console.log("expected TVL: ", expected)
+
+        console.log("percentDiff in TVL", percentDiff(actual, expected))
     })   
 });

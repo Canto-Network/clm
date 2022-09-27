@@ -33,3 +33,7 @@ export function diff(x: bigint, y: bigint) {
     }
     return y - x;
 }
+
+export function percentDiff(actual: bigint, expected: bigint) {     
+    return Number(diff(actual, expected)) / Number(expected)
+}   

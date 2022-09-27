@@ -10,6 +10,7 @@ const WETH_ADDRESS = '0x826551890Dc65655a0Aceca109aB11AbDbD7a07B'
 
 async function main() { 
 	const [dep] = await ethers.getSigners();
+	let note = await ethers.getContract("Note")
 
 	//check Comptroller parameters
 	let comptroller = new ethers.Contract(
@@ -19,19 +20,20 @@ async function main() {
 	)
 		
 	let usdc = await ethers.getContractAt('ERC20', USDC_ADDRESS)
-
-	console.log(`balance at ${'0xf60B12aD0d7CD84212d961cDDfF398f679cB3d94'}: ${(await usdc.balanceOf(`0xf60B12aD0d7CD84212d961cDDfF398f679cB3d94`)).toBigInt()}`)
 	
 	let weth = await ethers.getContractAt("WETH", "0x826551890Dc65655a0Aceca109aB11AbDbD7a07B")
-	let reservoir = await ethers.getContract("Reservoir")
+	let reservoir = await ethers.getContractAt("Reservoir", "0xF55b9a38a7937f6554d67bAF7a1aeA7eAF3509CA")
 	let timelock = await ethers.getContract("Timelock")
+	let accountant = await ethers.getContract(`AccountantDelegator`)
 	console.log(`Comptroller liquidation incentive: ${(await comptroller.liquidationIncentiveMantissa()).toBigInt()}`)
 	console.log(`Comptroller close Factor: ${(await comptroller.closeFactorMantissa()).toBigInt()}`)
-		
+
 	console.log(`Drip Canto`)
 	await (await reservoir.drip()).wait()
 	console.log(`Canto Dripped`)
 
+
+	console.log(`Reservoir wcanto balance: ${(await weth.balanceOf(reservoir.address)).toBigInt()}`)
 	console.log(`Unitroller address: ${(await deployments.get("Unitroller")).address}`)
 	console.log(`GovernorBravoDelegator: ${(await deployments.get("GovernorBravoDelegator")).address}`)
 	console.log(`Accountant Delegator: ${(await deployments.get("AccountantDelegator")).address}`)
@@ -46,6 +48,13 @@ async function main() {
 
 	console.log(`cCanto totalsupply: ${(await cCanto.totalSupply()).toBigInt()}`)	
 	console.log(`cCanto totalBorrows: ${(await cCanto.totalBorrows()).toBigInt()}`)
+	
+	
+	console.log(`Total Note in Existence: ${BigInt(2**256) / BigInt(1e18)}`)
+	console.log(`Total Note in Accountant: ${(await note.balanceOf(accountant.address)).toBigInt()/BigInt(1e18)}`)
+	console.log(`Total Note in Existence - Total Note in Accountant = Circulating Supply of Note`)
+	console.log(`----------------------------`)
+	console.log(`Circulating Note: ${(BigInt(2**256) - (await note.balanceOf(accountant.address)).toBigInt())/BigInt(1e18)}`)
 	
 	console.log(`Note: ${(await deployments.get("Note")).address}`)
 	let router = await ethers.getContract("BaseV1Router01")
@@ -78,8 +87,6 @@ async function main() {
 
 	// check addresses of pairs
 	let factory = await ethers.getContract("BaseV1Factory")
-	
-	let note = await deployments.get("Note")
 
 	console.log(`router comptroller address: ${await router.Comptroller()} deployment: ${comptroller.address}`)
 	console.log(`router note address: ${await router.note()} deployment: ${note.address}`)
@@ -94,6 +101,10 @@ async function main() {
 		let pairAddr = await factory.allPairs(i);
 
 		let pair = await ethers.getContractAt("BaseV1Pair", pairAddr)
+		let token0 = await pair.token0()
+		let token1 = await pair.token1()
+		let stable = await pair.stable()
+
 		console.log(`${await pair.name()} symbol: ${await pair.symbol()}`)
 		console.log(`${await pair.name()} token0: ${await pair.token0()}`)
 		console.log(`${await pair.name()} token1: ${await pair.token1()}`)
@@ -104,6 +115,8 @@ async function main() {
 		console.log(`${await pair.name()} periodSize: ${await pair.periodSize()}`)		
 		console.log(`${await pair.name()} address: ${pairAddr}`)
 		console.log(`${await pair.name()} observationLength: ${await pair.observationLength()}`)
+		// test getReserves for pairs
+		console.log(`${await pair.name()} reserves: ${await router.getReserves(token0, token1, stable)}`)
 	}
 }
 

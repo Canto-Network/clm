@@ -4,36 +4,24 @@ const {canto} = require("../../config/index");
 async function main() { 
 	let abiCoder = ethers.utils.defaultAbiCoder
 
-	let CUsdc = await ethers.getContract("CUsdcDelegator")
-	let comptroller = await ethers.getContractAt("Comptroller", (await deployments.get("Unitroller")).address)
-	let reservoir = await ethers.getContract("Reservoir")
-
-	// lpTokens
-	let cUsdc = await ethers.getContract("CUsdcDelegator")
-	let cUsdt = await ethers.getContract("CUsdtDelegator")
-	let cNoteUsdc = await ethers.getContract("CNoteUsdcDelegator")
-	let cNoteUsdt = await ethers.getContract("CNoteUsdtDelegator")
-	let cCantoNote = await ethers.getContract("CCantoNoteDelegator")
-	let cCantoAtom = await ethers.getContract("CCantoAtomDelegator")
-	let cCantoEth = await ethers.getContract("CCantoEthDelegator")
 	let tokens = [
-		"0xdE59F060D7ee2b612E7360E6C1B97c4d8289Ca2e", //cUsdc delegator
-		"0x6b46ba92d7e94FfA658698764f5b8dfD537315A9", // cUsdt delegator
-		"0xD6a97e43FC885A83E97d599796458A331E580800", //cNoteUsdc Delegator 
-		"0xf0cd6b5cE8A01D1B81F1d8B76643866c5816b49F", //cNoteUsdt Delegator
-		"0xC0D6574b2fe71eED8Cd305df0DA2323237322557", //cCantoAtom Delegator 
-		"0xb49A395B39A0b410675406bEE7bD06330CB503E3", //cCantoEth Delegator
-		"0x3C96dCfd875253A37acB3D2B102b6f328349b16B" //cCantoNote Delegator
+		(await deployments.get("CUsdcDelegator")).address, //cUsdc delegator
+		(await deployments.get("CUsdtDelegator")).address, // cUsdt delegator
+		(await deployments.get("CNoteUsdcDelegator")).address, //cNoteUsdc Delegator 
+		(await deployments.get("CNoteUsdtDelegator")).address, //cNoteUsdt Delegator
+		(await deployments.get("CCantoAtomDelegator")).address, //cCantoAtom Delegator 
+		(await deployments.get("CCantoEthDelegator")).address, //cCantoEth Delegator
+		(await deployments.get("CCantoNoteDelegator")).address //cCantoNote Delegator
 	]
 
 	let supplySpeeds = [
-		ethers.utils.parseUnits("0.4493041178", "18"),
-		ethers.utils.parseUnits("0.4493041178", "18"),
-		ethers.utils.parseUnits("17.97216471", "18"),
-		ethers.utils.parseUnits("17.97216471", "18"),
-		ethers.utils.parseUnits("26.95824707","18"),
-		ethers.utils.parseUnits("26.95824707","18"),
-		ethers.utils.parseUnits("53.91649413", "18")
+		ethers.utils.parseUnits("0.3", "18"),
+		ethers.utils.parseUnits("0.3", "18"),
+		ethers.utils.parseUnits("4", "18"),
+		ethers.utils.parseUnits("4", "18"),
+		ethers.utils.parseUnits("16","18"),
+		ethers.utils.parseUnits("16","18"),
+		ethers.utils.parseUnits("32", "18")
 	]
 	let borrowSpeeds = [ 
 		0,
@@ -44,16 +32,24 @@ async function main() {
 		0,
 		0
 	]
-	
-	console.log("tokens: ", tokens)
+		
+	// reservoir
+	let reservoir = await ethers.getContractAt("Reservoir", "0xF55b9a38a7937f6554d67bAF7a1aeA7eAF3509CA")
+	console.log(`Reservoir drip rate: ${await reservoir.dripRate()}`)
 
-	console.log(`CUsdc compSupplySpeed: `, (await comptroller.compSupplySpeeds(CUsdc.address)).toBigInt())
+	let priceOracleAddr = "0xCE1541C1dE95ea8d726b3ead31EdB8A8543915F2";
+
+	// console.log(`CUsdc compSupplySpeed: `, (await comptroller.compSupplySpeeds(CUsdc.address)).toBigInt())
 
 	data = abiCoder.encode(["address[]", "uint[]", "uint[]"], [tokens, supplySpeeds , borrowSpeeds])
 	console.log(data)	
 	// send funds to reservoir call data
-	data = abiCoder.encode(["address","uint256","string"], ["0xCD9A55aa5C890b132700Ef9aA8218Db2F55327d8", ethers.utils.parseUnits("62500000", "18"), "CANTO"])
+	data = abiCoder.encode(["address","uint256","string"], ["0xF55b9a38a7937f6554d67bAF7a1aeA7eAF3509CA", ethers.utils.parseUnits("32500000", "18"), "CANTO"])
 	console.log("TreasurySend: ", data)
+
+	// update comptroller Price Oracle
+	data = abiCoder.encode(["address"], [priceOracleAddr]);
+	console.log(`Updating price Oracle data: ${data}`)
 }
 
   

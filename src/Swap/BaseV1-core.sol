@@ -3,6 +3,7 @@ pragma solidity 0.8.11;
 
 import "./BaseV1-libs.sol";
 
+
 interface IBaseV1Callee {
     function hook(address sender, uint amount0, uint amount1, bytes calldata data) external;
 }
@@ -134,7 +135,7 @@ contract BaseV1Pair {
     }
 
     // update reserves and, on the first call per block, price accumulators
-    function _update(uint balance0, uint balance1, uint _reserve0, uint _reserve1) internal {
+    function _update(uint balance0, uint balance1, uint _reserve0, uint _reserve1, uint _totalSupply) internal {
         uint blockTimestamp = block.timestamp;
         uint timeElapsed = blockTimestamp - blockTimestampLast;
         if (timeElapsed > 0 && _reserve0 != 0 && _reserve1 != 0) {
@@ -310,7 +311,7 @@ contract BaseV1Pair {
         require(liquidity > 0, "ILM"); // BaseV1: INSUFFICIENT_LIQUIDITY_MINTED
         _mint(to, liquidity);
 
-        _update(_balance0, _balance1, _reserve0, _reserve1);
+        _update(_balance0, _balance1, _reserve0, _reserve1, _totalSupply);
         emit Mint(msg.sender, _amount0, _amount1);
     }
 
@@ -333,7 +334,7 @@ contract BaseV1Pair {
         _balance0 = erc20(_token0).balanceOf(address(this));
         _balance1 = erc20(_token1).balanceOf(address(this));
 
-        _update(_balance0, _balance1, _reserve0, _reserve1);
+        _update(_balance0, _balance1, _reserve0, _reserve1, _totalSupply);
         emit Burn(msg.sender, amount0, amount1, to);
     }
 
@@ -367,7 +368,7 @@ contract BaseV1Pair {
         require(_k(_balance0, _balance1) >= _k(_reserve0, _reserve1), "K"); // BaseV1: K
         }
 
-        _update(_balance0, _balance1, _reserve0, _reserve1);
+        _update(_balance0, _balance1, _reserve0, _reserve1, totalSupply);
         emit Swap(msg.sender, amount0In, amount1In, amount0Out, amount1Out, to);
     }
 
@@ -380,7 +381,7 @@ contract BaseV1Pair {
 
     // force reserves to match balances
     function sync() external lock {
-        _update(erc20(token0).balanceOf(address(this)), erc20(token1).balanceOf(address(this)), reserve0, reserve1);
+        _update(erc20(token0).balanceOf(address(this)), erc20(token1).balanceOf(address(this)), reserve0, reserve1, totalSupply);
     }
 
     function _f(uint x0, uint y) internal pure returns (uint) {

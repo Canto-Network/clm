@@ -26,7 +26,7 @@ contract ReservoirTest is Test {
         console.log("WETH balance: ", reservoirBalance);
         assertEq(reservoirBalance, amount);
     }
-        function testFail_ReservoirTransfer(uint amount) public {
+    function testFail_ReservoirTransfer(uint amount) public {
         //increase balance of admin
         vm.assume(amount > 100);
         vm.deal(admin, amount);

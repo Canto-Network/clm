@@ -6,6 +6,7 @@ import "../CToken.sol";
 import "../PriceOracle.sol";
 import "./BaseV1-libs.sol";
 
+
 interface IBaseV1Factory {
     function allPairsLength() external view returns (uint);
     function isPair(address pair) external view returns (bool);
@@ -32,6 +33,7 @@ interface IBaseV1Pair {
     function sampleSupply(uint points, uint window) external view returns(uint[] memory);
     function sample(address tokenIn, uint amountIn, uint points, uint window) external view returns(uint[] memory);
     function quote(address tokenIn, uint amountIn, uint granularity) external view returns(uint);
+    function observationLength() external view returns(uint);
 }
 
 interface IWCANTO {
@@ -547,7 +549,7 @@ contract BaseV1Router01 is PriceOracle {
 
     // this function returns the TWAP of the LP tokens from pair
     function getPriceLP(IBaseV1Pair pair) internal view returns(uint) {
-        uint[] memory supply = pair.sampleSupply(8, 1);
+        uint[] memory supply = pair.sampleSupply(12, 1);
         uint[] memory prices; 
         uint[] memory unitReserves; 
         uint[] memory assetReserves; 
@@ -558,39 +560,39 @@ contract BaseV1Router01 is PriceOracle {
         if (pair.stable()) { // stable pairs will be priced in terms of Note
             if (token0 == note) { //token0 is the unit, token1 will be priced with respect to this asset initially
                 decimals = 10 ** (erc20(token1).decimals()); // we must normalize the price of token1 to 18 decimals
-                prices = pair.sample(token1, decimals, 8, 1);
-                (unitReserves, assetReserves) = pair.sampleReserves(8, 1);
+                prices = pair.sample(token1, decimals, 12, 1);
+                (unitReserves, assetReserves) = pair.sampleReserves(12, 1);
             } else {
                 decimals = 10 ** (erc20(token0).decimals());
-                prices = pair.sample(token0, decimals, 8, 1);
-                (assetReserves, unitReserves) = pair.sampleReserves(8, 1);
+                prices = pair.sample(token0, decimals, 12, 1);
+                (assetReserves, unitReserves) = pair.sampleReserves(12, 1);
             }
         } else { // non-stable pairs will be priced in terms of Canto
             if (token0 == address(wcanto)) { // token0 is Canto, and the unit asset of this pair is Canto
                 decimals = 10 ** (erc20(token1).decimals());
-                prices = pair.sample(token1, decimals, 8, 1);
-                (unitReserves, assetReserves) = pair.sampleReserves(8, 1);
+                prices = pair.sample(token1, decimals, 12, 1);
+                (unitReserves, assetReserves) = pair.sampleReserves(12, 1);
             } else {
                 decimals = 10 ** (erc20(token0)).decimals();
-                prices = pair.sample(token0, decimals, 8, 1);
-                (assetReserves, unitReserves) = pair.sampleReserves(8, 1);
+                prices = pair.sample(token0, decimals, 12, 1);
+                (assetReserves, unitReserves) = pair.sampleReserves(12, 1);
             }
         }
         uint LpPricesCumulative;
 
-        for(uint i; i < 8; ++i) {
-            uint token0TVL = assetReserves[i] * (prices[i] / decimals);
-            uint token1TVL = unitReserves[i]; // price of the unit asset is always 1
-            LpPricesCumulative += (token0TVL + token1TVL) * 1e18 / supply[i];  
+        for(uint i; i < 12; ++i) {
+            uint token0TVL = (assetReserves[i] * prices[i]) / decimals;
+             uint token1TVL = unitReserves[i]; // price of the unit asset is always 1
+            LpPricesCumulative += (token0TVL + token1TVL) * 1e18 / supply[i];
         }
-        uint LpPrice = LpPricesCumulative / 8; // take the average of the cumulative prices 
+        uint LpPrice = LpPricesCumulative / 12; // take the average of the cumulative prices 
         
         if (pair.stable()) { // this asset has been priced in terms of Note
             return LpPrice;
         }
         // this asset has been priced in terms of Canto
         return LpPrice * getPriceNote(address(wcanto), false) / 1e18; // return the price in terms of Note
-    }   
+    }
 
 
     function compareStrings(string memory str1, string memory str2) internal pure returns(bool) {

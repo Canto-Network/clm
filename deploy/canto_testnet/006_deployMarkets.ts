@@ -24,7 +24,7 @@ const func: DeployFunction = async function(hre: HardhatRuntimeEnvironment) {
         contract: "ERC20",
         from: deployer,
         log: true,
-        args: ["USDC", "USDC", ethers.utils.parseUnits("1000000000", 6), 6]
+        args: ["USDC", "USDC", ethers.utils.parseUnits("100000000000000000", 6), 6]
     });
 
     const USDT = await deploy("USDT", {

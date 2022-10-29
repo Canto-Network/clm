@@ -10,15 +10,14 @@ contract ERC20 is EIP20Interface {
     uint256 private _totalSupply;
 
     uint256 public _initialSupply;
-    
 
     uint8 public _decimals;
 
     string private _name;
     string private _symbol;
 
-    uint256 MAX_INT = 2**256-1;
-    
+    uint256 MAX_INT = 2 ** 256 - 1;
+
     /**
      * @dev Sets the values for {name} and {symbol}.
      *
@@ -28,11 +27,18 @@ contract ERC20 is EIP20Interface {
      * All two of these values are immutable: they can only be set once during
      * construction.
      */
-    constructor(string memory name_, string memory symbol_, uint256 totalSupply_, uint8 decimals_) public {
+    constructor(
+        string memory name_,
+        string memory symbol_,
+        uint256 totalSupply_,
+        uint8 decimals_
+    )
+        public
+    {
         _name = name_;
         _symbol = symbol_;
-	    _initialSupply = totalSupply_;
-	    _totalSupply = totalSupply_;
+        _initialSupply = totalSupply_;
+        _totalSupply = totalSupply_;
         _balances[msg.sender] = totalSupply_;
         _decimals = decimals_;
     }
@@ -73,7 +79,7 @@ contract ERC20 is EIP20Interface {
      * @dev See {IERC20-totalSupply}.
      */
     function totalSupply() public view returns (uint256) {
-	    return _totalSupply;
+        return _totalSupply;
     }
 
     /**
@@ -92,7 +98,7 @@ contract ERC20 is EIP20Interface {
      * - the caller must have a balance of at least `amount`.
      */
     function transfer(address to, uint256 amount) public returns (bool) {
-	    address owner = msg.sender;
+        address owner = msg.sender;
         _transfer(owner, to, amount);
         return true;
     }
@@ -100,7 +106,11 @@ contract ERC20 is EIP20Interface {
     /**
      * @dev See {IERC20-allowance}.
      */
-    function allowance(address owner, address spender) public view  returns (uint256) {
+    function allowance(address owner, address spender)
+        public
+        view
+        returns (uint256)
+    {
         return _allowances[owner][spender];
     }
 
@@ -136,17 +146,15 @@ contract ERC20 is EIP20Interface {
      * - the caller must have allowance for ``from``'s tokens of at least
      * `amount`.
      */
-    function transferFrom(
-        address from,
-        address to,
-        uint256 amount
-    ) public returns (bool) {
+    function transferFrom(address from, address to, uint256 amount)
+        public
+        returns (bool)
+    {
         address spender = msg.sender;
         _spendAllowance(from, spender, amount);
         _transfer(from, to, amount);
         return true;
     }
-
 
     /**
      * @dev Atomically increases the allowance granted to `spender` by the caller.
@@ -160,7 +168,10 @@ contract ERC20 is EIP20Interface {
      *
      * - `spender` cannot be the zero address.
      */
-    function increaseAllowance(address spender, uint256 addedValue) public   returns (bool) {
+    function increaseAllowance(address spender, uint256 addedValue)
+        public
+        returns (bool)
+    {
         address owner = msg.sender;
         _approve(owner, spender, allowance(owner, spender) + addedValue);
         return true;
@@ -180,11 +191,17 @@ contract ERC20 is EIP20Interface {
      * - `spender` must have allowance for the caller of at least
      * `subtractedValue`.
      */
-    function decreaseAllowance(address spender, uint256 subtractedValue) public   returns (bool) {
+    function decreaseAllowance(address spender, uint256 subtractedValue)
+        public
+        returns (bool)
+    {
         address owner = msg.sender;
         uint256 currentAllowance = allowance(owner, spender);
-        require(currentAllowance >= subtractedValue, "ERC20: decreased allowance below zero");
-	    _approve(owner, spender, currentAllowance - subtractedValue);
+        require(
+            currentAllowance >= subtractedValue,
+            "ERC20: decreased allowance below zero"
+        );
+        _approve(owner, spender, currentAllowance - subtractedValue);
 
         return true;
     }
@@ -203,15 +220,10 @@ contract ERC20 is EIP20Interface {
      * - `to` cannot be the zero address.
      * - `from` must have a balance of at least `amount`.
      */
-    function _transfer(
-        address from,
-        address to,
-        uint256 amount
-    ) internal   {
+    function _transfer(address from, address to, uint256 amount) internal {
         require(from != address(0), "ERC20: transfer from the zero address");
         require(to != address(0), "ERC20: transfer to the zero address");
-        
-        
+
         uint256 fromBalance = _balances[from];
         require(fromBalance >= amount, "ERC20: transfer amount exceeds balance");
         _balances[from] = fromBalance - amount;
@@ -220,7 +232,8 @@ contract ERC20 is EIP20Interface {
         emit Transfer(from, to, amount);
     }
 
-    /** @dev Creates `amount` tokens and assigns them to `account`, increasing
+    /**
+     * @dev Creates `amount` tokens and assigns them to `account`, increasing
      * the total supply.
      *
      * Emits a {Transfer} event with `from` set to the zero address.
@@ -229,7 +242,7 @@ contract ERC20 is EIP20Interface {
      *
      * - `account` cannot be the zero address.
      */
-    function _mint(address account, uint256 amount) internal   {
+    function _mint(address account, uint256 amount) internal {
         require(account != address(0), "ERC20: mint to the zero address");
 
         _totalSupply += amount;
@@ -248,12 +261,12 @@ contract ERC20 is EIP20Interface {
      * - `account` cannot be the zero address.
      * - `account` must have at least `amount` tokens.
      */
-    function _burn(address account, uint256 amount) internal   {
+    function _burn(address account, uint256 amount) internal {
         require(account != address(0), "ERC20: burn from the zero address");
 
         uint256 accountBalance = _balances[account];
         require(accountBalance >= amount, "ERC20: burn amount exceeds balance");
-	    _balances[account] = accountBalance - amount;
+        _balances[account] = accountBalance - amount;
         _totalSupply -= amount;
 
         emit Transfer(account, address(0), amount);
@@ -272,11 +285,9 @@ contract ERC20 is EIP20Interface {
      * - `owner` cannot be the zero address.
      * - `spender` cannot be the zero address.
      */
-    function _approve(
-        address owner,
-        address spender,
-        uint256 amount
-    ) internal   {
+    function _approve(address owner, address spender, uint256 amount)
+        internal
+    {
         require(owner != address(0), "ERC20: approve from the zero address");
         require(spender != address(0), "ERC20: approve to the zero address");
 
@@ -292,15 +303,13 @@ contract ERC20 is EIP20Interface {
      *
      * Might emit an {Approval} event.
      */
-    function _spendAllowance(
-        address owner,
-        address spender,
-        uint256 amount
-    ) internal   {
+    function _spendAllowance(address owner, address spender, uint256 amount)
+        internal
+    {
         uint256 currentAllowance = allowance(owner, spender);
         if (currentAllowance != MAX_INT) {
             require(currentAllowance >= amount, "ERC20: insufficient allowance");
-	    _approve(owner, spender, currentAllowance - amount);
+            _approve(owner, spender, currentAllowance - amount);
         }
     }
 }

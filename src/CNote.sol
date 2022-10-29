@@ -8,6 +8,7 @@ import "./NoteInterest.sol";
 
 contract CNote is CErc20Delegate {
     event AccountantSet(address accountant, address accountantPrior);
+
     error FailedTransfer(uint256 amount);
 
     AccountantInterface public _accountant; // accountant private _accountant = Accountant(address(0));
@@ -32,7 +33,13 @@ contract CNote is CErc20Delegate {
     /**
      * @dev getCashPrior retrieves balance of the accountant (not cNote contract)
      */
-    function getCashPrior() internal view virtual override returns (uint256) {
+    function getCashPrior()
+        internal
+        view
+        virtual
+        override
+        returns (uint256)
+    {
         EIP20Interface token = EIP20Interface(underlying);
         return token.balanceOf(address(_accountant));
     }
@@ -67,8 +74,8 @@ contract CNote is CErc20Delegate {
              *  exchangeRate = (totalCash + totalBorrows - totalReserves) / totalSupply
              */
             uint256 cashPlusBorrowsMinusReserves = totalBorrows - totalReserves; // totalCash in cNote Lending Market is zero, thus it is not factored into the exchangeRate
-            uint256 exchangeRate = (cashPlusBorrowsMinusReserves * expScale) /
-                _totalSupply;
+            uint256 exchangeRate =
+                cashPlusBorrowsMinusReserves * expScale / _totalSupply;
 
             return exchangeRate;
         }
@@ -181,11 +188,8 @@ contract CNote is CErc20Delegate {
         override
     {
         /* Fail if borrow not allowed */
-        uint256 allowed = comptroller.borrowAllowed(
-            address(this),
-            borrower,
-            borrowAmount
-        );
+        uint256 allowed =
+            comptroller.borrowAllowed(address(this), borrower, borrowAmount);
         if (allowed != 0) {
             revert BorrowComptrollerRejection(allowed);
         }
@@ -244,7 +248,10 @@ contract CNote is CErc20Delegate {
         address payable redeemer,
         uint256 redeemTokensIn,
         uint256 redeemAmountIn
-    ) internal override {
+    )
+        internal
+        override
+    {
         require(
             redeemTokensIn == 0 || redeemAmountIn == 0,
             "one of redeemTokensIn or redeemAmountIn must be zero"
@@ -273,11 +280,8 @@ contract CNote is CErc20Delegate {
         }
 
         /* Fail if redeem not allowed */
-        uint256 allowed = comptroller.redeemAllowed(
-            address(this),
-            redeemer,
-            redeemTokens
-        );
+        uint256 allowed =
+            comptroller.redeemAllowed(address(this), redeemer, redeemTokens);
         if (allowed != 0) {
             revert RedeemComptrollerRejection(allowed);
         }
@@ -317,14 +321,13 @@ contract CNote is CErc20Delegate {
 
         /* We call the defense hook */
         comptroller.redeemVerify(
-            address(this),
-            redeemer,
-            redeemAmount,
-            redeemTokens
+            address(this), redeemer, redeemAmount, redeemTokens
         );
     }
 
-    /*** Reentrancy Guard ***/
+    /**
+     ** Reentrancy Guard **
+     */
     /**
      * @dev Prevents a contract from calling itself, directly or indirectly.
      */

@@ -5,13 +5,13 @@ const USDC_ADDRESS = "0x80b5a32E4F032B2a058b4F29EC95EEfEEB87aDcd"
 const ETH_ADDRESS = "0x5FD55A1B9FC24967C4dB09C513C3BA0DFa7FF687"
 const ATOM_ADDRESS = "0xecEEEfCEE421D8062EF8d6b4D814efe4dc898265"
 const USDT_ADDRESS = "0xd567B3d7B8FE3C79a1AD8dA978812cfC4Fa05e75"
+const WETH_ADDR = "0x826551890Dc65655a0Aceca109aB11AbDbD7a07B"
 
-
-const noteUsdc = "0x753eF0D3506D70D8266335C16A5ed7cC71Aa376a"
-const noteCanto = "0xF326fFc2Faee43F6f42B120204267F66fc24146C"
-const noteUsdt = "0x406376a1ea40cf149A31f6e23638f99900988f46"
-const cantoETH = "0x03cD777F7DA9EE2884fc2FD111808467C4Df0203"
-const cantoAtom = "0x4C7504dFEe142849d59a96D4A1954eE9c7ea7437"
+const noteUsdc = "0x9571997a66D63958e1B3De9647C22bD6b9e7228c" // 0x9571997a66D63958e1B3De9647C22bD6b9e7228c
+const noteCanto = "0x1D20635535307208919f0b67c3B2065965A85aA9" //0x1D20635535307208919f0b67c3B2065965A85aA9
+const noteUsdt = "0x35DB1f3a6A6F07f82C76fCC415dB6cFB1a7df833" // 0x35DB1f3a6A6F07f82C76fCC415dB6cFB1a7df833
+const cantoETH = "0x216400ba362d8FCE640085755e47075109718C8B" // 0x216400ba362d8FCE640085755e47075109718C8B
+const cantoAtom = "0x30838619C55B787BafC3A4cD9aEa851C1cfB7b19" // 0x30838619C55B787BafC3A4cD9aEa851C1cfB7b19
 
 async function main() { 
 	const [dep] = await ethers.getSigners();
@@ -24,8 +24,17 @@ async function main() {
   
   let factory = await ethers.getContract("BaseV1Factory")
   let router = await ethers.getContract("BaseV1Router01")
+
+  if (router.address != "0xa252eEE9BDe830Ca4793F054B506587027825a8e") { 
+    return process.exit(1)
+  }
+
   let note = await ethers.getContract("Note")
-  let weth = await ethers.getContract("WETH")
+  if (note.address != "0x4e71A2E537B7f9D9413D3991D37958c0b5e1e503") {
+    return process.exit(1)
+  }
+    
+  let weth = await ethers.getContractAt("WETH", WETH_ADDR)
     
   let cNote = await ethers.getContract("CNoteDelegator")
   let cUsdt = await ethers.getContract("CUsdtDelegator")
@@ -41,7 +50,8 @@ async function main() {
   console.log(`USDC balance: ${(await usdc.balanceOf(dep.address)).toBigInt()}`)
   console.log(`USDT balance: ${(await usdt.balanceOf(dep.address)).toBigInt()}`)
   console.log(`ETH balance: ${(await eth.balanceOf(dep.address)).toBigInt()}`)
-  
+  console.log(`WCANTO BALANCE: ${(await weth.balanceOf(dep.address)).toBigInt()}`)
+  console.log( `Note balance: ${(await note.balanceOf(dep.address)).toBigInt()}`)
   // swap note <--> usdc 
   // approve transfer before swap
   await (await note.approve(router.address, ethers.utils.parseUnits("1", "18"))).wait()
@@ -56,7 +66,7 @@ async function main() {
     dep.address,
     9999999999999
   )).wait();
-
+  console.log(`Note USDC Swap Made`)
   //swap note <--> usdt 
   //approve transfer before swap
   await (await note.approve(router.address, ethers.utils.parseUnits("1", "18"))).wait()
@@ -71,7 +81,7 @@ async function main() {
     dep.address,
     9999999999999
   )).wait();
-
+  console.log(`Note USDT swap made`)
 
   //swap canto <--> eth
   //approve transfer before swap
@@ -87,7 +97,7 @@ async function main() {
     dep.address,
     9999999999999
   )).wait();
-
+  console.log(`Canto ETh swap made`)
   //swap canto <--> note
   //approve transfer before swap
   await (await weth.approve(router.address, ethers.utils.parseUnits("1", "18"))).wait()
@@ -102,7 +112,7 @@ async function main() {
     dep.address,
     9999999999999
   )).wait();
-
+  console.log(`Canto Note swap made`)
   //swap canto <---> atom
   //approve transfer before swap
   await (await weth.approve(router.address, ethers.utils.parseUnits("1", "18"))).wait()

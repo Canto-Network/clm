@@ -51,7 +51,7 @@ const func: DeployFunction = async function(hre: HardhatRuntimeEnvironment) {
         let eta = (await ethers.provider.getBlock((await ethers.provider.getBlockNumber()))).timestamp + 100
         console.log("Setting Timelock Admin")
         await (await timelock.queueTransaction(timelock.address, 0, "setPendingAdmin(address)", ethers.utils.hexlify(calldata), eta)).wait()
-        await new Promise(f => setTimeout(f, 100 * 1000)); // wait 100 seconds
+        await new Promise(f => setTimeout(f, 100 * 1000 )); // wait 100 seconds
         await (await timelock.executeTransaction(Timelock.address, 0, "setPendingAdmin(address)", ethers.utils.hexlify(calldata), eta)).wait()
     }
     await (await governor._initiate()).wait()

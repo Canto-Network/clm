@@ -1,28 +1,15 @@
-import { HardhatRuntimeEnvironment } from "hardhat/types";
-import { DeployFunction } from "hardhat-deploy/types";
-import {canto} from "../../config/index.js";
-import { parseUnits } from "ethers/lib/utils.js";
+const canto = require("../../config/index.js");
+async function main() {
+    const [dep] = await ethers.getSigners();
 
-const func: DeployFunction = async function(hre: HardhatRuntimeEnvironment) {
-    const {ethers, deployments, getNamedAccounts} = hre;
-    const {deploy, execute, read} = deployments;
-
-    const {deployer} = await getNamedAccounts();
-
-    const etherDep = await hre.ethers.getSigner(deployer);
-
-    // instantiate the Unitroller as a proxy contract
-    let comptroller = new hre.ethers.Contract(
+    const comptroller = new ethers.Contract(
         (await deployments.get("Unitroller")).address,
         (await deployments.get("Comptroller")).abi,
-        hre.ethers.provider.getSigner(deployer)
-        );
-    
-    const markets = canto.markets
-        
-    await (await comptroller._setLiquidationIncentive(parseUnits("1.07", 18))).wait() // set the liquidation incentive for this market
-    await (await comptroller._setCloseFactor(parseUnits("0.5", 18))).wait() // set the close Factor
-    
+        dep
+      )
+    const Cantomarkets = require("../../config/markets.js");
+    const markets = Cantomarkets.canto;
+
     // retrieve market parameters
     let cNote = await ethers.getContract("CNoteDelegator")
     let cCanto = await ethers.getContract("CCanto")
@@ -112,8 +99,10 @@ const func: DeployFunction = async function(hre: HardhatRuntimeEnvironment) {
     await (await comptroller._setCompSpeeds ([cNoteUsdt.address], [markets.CNoteUsdt.compSupplySpeed], [markets.CNoteUsdt.compBorrowSpeed])).wait()
     await (await comptroller._setMarketBorrowCaps([cNoteUsdt.address], [markets.CNoteUsdt.borrowCap])).wait() //set the BorrowCap For this market
     console.log("CNoteUsdt configured")   
-};          
-
-export default func;
-func.tags = ["ConfigureMarkets", "Deployment"];
-func.dependencies = ["Markets", "GovernanceConfig", "ConfigurePairs"];
+}
+main()
+  .then(() => process.exit(0))
+  .catch((error) => {
+    console.error(error);
+    process.exit(1);
+});

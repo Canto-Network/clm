@@ -5,7 +5,7 @@ const canto = {
     models: models.canto,
     markets: markets.canto,
     migrateAdmin: true,
-    timelockDelay: 3600, // 1 hour delay for Timelock
+    timelockDelay: 0, // 1 hour delay for Timelock
     dripRate: "143777317700000000000",
 };
 

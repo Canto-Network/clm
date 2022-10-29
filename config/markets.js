@@ -1,3 +1,4 @@
+const { parseUnits } = require("ethers/lib/utils");
 const {ethers} = require("hardhat");
 
 const CNote = {
@@ -21,12 +22,12 @@ const CCanto = {
     symbol: "cCANTO",
     decimals: "18",
     InterestRateModel: "JumpRate",   
-    CollateralFactor: "0",
+    CollateralFactor: parseUnits("0.25", 18),
     compBorrowSpeed: "0",
     compSupplySpeed: "0",
     liquidationIncentive: ethers.utils.parseUnits("0.1","18"),
     closeFactor: ethers.utils.parseUnits("0.5", "18"),
-    borrowCap: "1",
+    borrowCap: parseUnits("10000", 18),
     becomeImplementation: [],
 };
 
@@ -56,7 +57,7 @@ const CAtom = {
     compSupplySpeed: "0",
     liquidationIncentive: ethers.utils.parseUnits("0.1", "18"),
     closeFactor: ethers.utils.parseUnits("0.5", "18"),
-    borrowCap: "1",
+    borrowCap: parseUnits("50000", "6"),
     becomeImplementation: [],
 };  
 
@@ -68,7 +69,7 @@ const CUsdc = {
     InterestRateModel: "JumpRate",   
     CollateralFactor: ethers.utils.parseUnits("0.8", "18"),
     compBorrowSpeed: "0",
-    compSupplySpeed: "0",
+    compSupplySpeed: parseUnits("0.3", 18),
     liquidationIncentive: ethers.utils.parseUnits("0.1", "18"),
     closeFactor: ethers.utils.parseUnits("0.5", "18"),
     borrowCap: ethers.utils.parseUnits("10000000", "6"),
@@ -83,7 +84,7 @@ const CUsdt = {
     InterestRateModel: "JumpRate",   
     CollateralFactor: ethers.utils.parseUnits("0.8", "18"),
     compBorrowSpeed: "0",
-    compSupplySpeed: "0",
+    compSupplySpeed: parseUnits("0.3", 18),
     liquidationIncentive: ethers.utils.parseUnits("0.1", "18"),
     closeFactor: ethers.utils.parseUnits("0.5", "18"),
     borrowCap: ethers.utils.parseUnits("10000000", "6"),
@@ -96,12 +97,12 @@ const CNoteUsdc = {
     symbol: "cNOTE/USDC", 
     decimals: "18",
     InterestRateModel: "JumpRate",   
-    CollateralFactor: "0",
+    CollateralFactor: parseUnits("0.9", 18),
     compBorrowSpeed: "0",
-    compSupplySpeed: "0",
-    liquidationIncentive: ethers.utils.parseUnits("0.1", "18"),
-    closeFactor: ethers.utils.parseUnits("0.5", "18"),
-    borrowCap: "1",    
+    compSupplySpeed: parseUnits("4", 18),
+    liquidationIncentive: ethers.utils.parseUnits("0.03", "18"),
+    closeFactor: ethers.utils.parseUnits("0.25", "18"),
+    borrowCap: parseUnits("100000", 18),    
     becomeImplementation: [],
 };  
 
@@ -111,12 +112,12 @@ const CNoteUsdt = {
     symbol: "cNOTE/USDT",
     decimals: "18",
     InterestRateModel: "JumpRate",   
-    CollateralFactor: "0",
+    CollateralFactor: parseUnits("0.9", 18),
     compBorrowSpeed: "0",
-    compSupplySpeed: "0",
-    liquidationIncentive: ethers.utils.parseUnits("0.1", "18"),
-    closeFactor: ethers.utils.parseUnits("0.5", "18"),
-    borrowCap: "1",
+    compSupplySpeed: parseUnits("4", 18),
+    liquidationIncentive: ethers.utils.parseUnits("0.03", "18"),
+    closeFactor: ethers.utils.parseUnits("0.25", "18"),
+    borrowCap: parseUnits("100000", 18),
     becomeImplementation: [],
 };  
 
@@ -126,12 +127,12 @@ const CCantoAtom = {
     symbol: "cCANTO/ATOM",
     decimals: "18",
     InterestRateModel: "JumpRate",   
-    CollateralFactor: "0",
+    CollateralFactor: parseUnits("0.4", 18),
     compBorrowSpeed: "0",
-    compSupplySpeed: "0",
-    liquidationIncentive: ethers.utils.parseUnits("0.1", "18"),
+    compSupplySpeed: parseUnits("16", 18),
+    liquidationIncentive: ethers.utils.parseUnits("0.08", "18"),
     closeFactor: ethers.utils.parseUnits("0.5", "18"),
-    borrowCap: "1",
+    borrowCap: parseUnits("25000", 18),
     becomeImplementation: [],
 };  
 
@@ -141,12 +142,12 @@ const CCantoEth ={
     symbol: "cCANTO/ETH",
     decimals: "18",
     InterestRateModel: "JumpRate",   
-    CollateralFactor: "0",
+    CollateralFactor: parseUnits("0.5", 18),
     compBorrowSpeed: "0",
-    compSupplySpeed: "0",
-    liquidationIncentive: ethers.utils.parseUnits("0.1", "18"),
+    compSupplySpeed: parseUnits("16", 18),
+    liquidationIncentive: ethers.utils.parseUnits("0.7", "18"),
     closeFactor: ethers.utils.parseUnits("0.5", "18"),
-    borrowCap: "1",
+    borrowCap: parseUnits("25000", 18),
     becomeImplementation: [],
 };
 
@@ -156,12 +157,12 @@ const CCantoNote = {
     symbol: "cCANTO/NOTE",
     decimals: "18",
     InterestRateModel: "JumpRate",   
-    CollateralFactor: "0",
+    CollateralFactor: parseUnits("0.7", 18),
     compBorrowSpeed: "0",
-    compSupplySpeed: "0",
-    liquidationIncentive: ethers.utils.parseUnits("0.1", "18"),
-    closeFactor: ethers.utils.parseUnits("0.5", "18"),
-    borrowCap: "1",
+    compSupplySpeed: parseUnits("32", 18),
+    liquidationIncentive: ethers.utils.parseUnits("0.05", "18"),
+    closeFactor: ethers.utils.parseUnits("0.33", "18"),
+    borrowCap: parseUnits("50000", 18),
     becomeImplementation: [],
 };  
 

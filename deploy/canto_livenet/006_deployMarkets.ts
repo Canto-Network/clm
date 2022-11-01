@@ -3,10 +3,10 @@ import { DeployFunction } from "hardhat-deploy/dist/types";
 import {canto} from "../../config/index.js";
 
 //addresses to be populated on deployment
-const USDC_ADDRESS = "0x80b5a32E4F032B2a058b4F29EC95EEfEEB87aDcd"
-const ETH_ADDRESS = "0xd567B3d7B8FE3C79a1AD8dA978812cfC4Fa05e75"
-const ATOM_ADDRESS = "0x5FD55A1B9FC24967C4dB09C513C3BA0DFa7FF687"
-const USDT_ADDRESS = "0xecEEEfCEE421D8062EF8d6b4D814efe4dc898265"
+const USDC_ADDRESS = "0x2A68C77Dd0b83b1D86A650b521900d797227C74E"
+const ETH_ADDRESS = "0x83D5657CF91304da26093861D18A2cEc6dD8C42a"
+const ATOM_ADDRESS = "0x602f5E499238f9c9E2b469712f303CBC89C5eA5f"
+const USDT_ADDRESS = "0x65B1Def3502430070C61073857c82b93C54E444f"
 
 const func: DeployFunction = async function(hre: HardhatRuntimeEnvironment) {
     const {ethers, deployments, getNamedAccounts } = hre;

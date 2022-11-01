@@ -35,29 +35,30 @@ async function main() {
   )
   const Reservoir = await ethers.getContract("Reservoir");  
   const oracle = await ethers.getContract("BaseV1Router01");
-  const BaseV1Factory = await ethers.getContract("BaseV1Factory");
-  //All variables set
+  const BaseV1Factory = await ethers.getContract("BaseV1Factory")
+  const CLMORACLE = await ethers.getContract("CLMPriceOracle")
+//   //All variables set
   await ((await BaseV1Factory.setPeriodSize(0)).wait());
 
-  //borrow Note
-  await (await Unitroller._supportMarket(cUsdc.address)).wait();
-  (await Unitroller.enterMarkets([cUsdc.address])).wait();
-  await (await Unitroller._supportMarket(cNote.address)).wait();
-  await (await Unitroller._setCollateralFactor(cUsdc.address, parseUnits("0.5"))).wait();
-  await (await USDC.approve(cUsdc.address, "10000000000000000000000000")).wait()
-  await (await cUsdc.mint(parseUnits("5000000", "6"))).wait()
-  console.log("borrowing note");
-  console.log("note balance: ", (await Note.balanceOf(deployerAddress)).toBigInt());
-  await (await cNote.borrow(parseUnits("1000000", "18"))).wait()
-  console.log("borrow complete");
-//Add liquidity
-await (await WETH.deposit({value: ethers.utils.parseUnits("50000", "18") })).wait()
-await addLiquidity(Note, WETH, oracle, deployerAddress, false, "1000", "3000");
-await addLiquidity(ETH, WETH, oracle, deployerAddress,false, "2", "1400");
-await addLiquidity(WETH, ATOM, oracle, deployerAddress, false, "100", "30");
-await addLiquidity(Note, USDC, oracle, deployerAddress, true, "5000", "5000");
-await addLiquidity(Note, USDT, oracle, deployerAddress, true, "5000", "5000");
-await ((await BaseV1Factory.setPeriodSize(0)).wait());
+//   //borrow Note
+//   await (await Unitroller._supportMarket(cUsdc.address)).wait();
+//   (await Unitroller.enterMarkets([cUsdc.address])).wait();
+//   await (await Unitroller._supportMarket(cNote.address)).wait();
+//   await (await Unitroller._setCollateralFactor(cUsdc.address, parseUnits("0.5"))).wait();
+//   await (await USDC.approve(cUsdc.address, "10000000000000000000000000")).wait()
+//   await (await cUsdc.mint(parseUnits("5000000", "6"))).wait()
+//   console.log("borrowing note");
+//   console.log("note balance: ", (await Note.balanceOf(deployerAddress)).toBigInt());
+//   await (await cNote.borrow(parseUnits("1000000", "18"))).wait()
+//   console.log("borrow complete");
+// //Add liquidity
+// await (await WETH.deposit({value: ethers.utils.parseUnits("50000", "18") })).wait()
+// await addLiquidity(Note, WETH, oracle, deployerAddress, false, "3000", "1000");
+// await addLiquidity(ETH, WETH, oracle, deployerAddress,false, "2", "1400");
+// await addLiquidity(WETH, ATOM, oracle, deployerAddress, false, "100", "30");
+// await addLiquidity(Note, USDC, oracle, deployerAddress, true, "5000", "5000");
+// await addLiquidity(Note, USDT, oracle, deployerAddress, true, "5000", "5000");
+// await ((await BaseV1Factory.setPeriodSize(0)).wait());
 for (let i=0; i < 10; i++) {
     await swapTokens(Note, WETH, oracle, deployerAddress, false, "1000");
     await swapTokens(ETH, WETH, oracle, deployerAddress, false, "1000");

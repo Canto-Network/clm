@@ -176,6 +176,44 @@ contract RWATest is Test, Helpers {
         assertEq(rwaCToken.balanceOf(admin), ADMIN_INITIAL_BALANCE);
     }
 
+    function test_redeemCRWA() public {
+        prankAddCTokenMarket(address(rwaCToken), 0.5e18);
+        supplyToken(
+            admin,
+            address(rwaUnderlying),
+            address(rwaCToken),
+            ADMIN_INITIAL_BALANCE
+        );
+        vm.startPrank(admin);
+        rwaCToken.redeem(rwaCToken.balanceOf(admin));
+        vm.stopPrank();
+        assertEq(rwaCToken.balanceOf(admin), 0);
+    }
+
+    // cannot redeem if put in shortfall
+    function test_redeemNotAllowed() public {
+        prankAddCTokenMarket(address(rwaCToken), 0.5e18);
+        supplyToken(
+            admin,
+            address(rwaUnderlying),
+            address(rwaCToken),
+            ADMIN_INITIAL_BALANCE
+        );
+        vm.startPrank(admin);
+         //should be able to borrow same balance / 2 as supplied since cf = 50%
+        address[] memory markets = new address[](1);
+        markets[0] = address(cNote);
+
+        comptroller_.enterMarkets(markets);
+        cNote.borrow(ADMIN_INITIAL_BALANCE / 2);
+
+        uint balance = rwaCToken.balanceOf(admin);
+        vm.expectRevert();
+        rwaCToken.redeem(balance);
+
+        vm.stopPrank();
+    }
+
     function test_borrowAgainstRWA() public {
         prankAddCTokenMarket(address(rwaCToken), 0.5e18);
         supplyToken(

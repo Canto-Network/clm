@@ -6,7 +6,6 @@ import "./Treasury/TreasuryInterfaces.sol";
 import "./ErrorReporter.sol";
 import "./NoteInterest.sol";
 
-
 contract CNote is CErc20Delegate {
     event AccountantSet(address accountant, address accountantPrior);
 

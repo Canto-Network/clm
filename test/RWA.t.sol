@@ -27,18 +27,21 @@ contract RWATest is Test, Helpers {
     address admin = address(123454321);
     uint ADMIN_INITIAL_BALANCE = 100 ether;
 
+    // supports cToken market and sets collateral factor
     function addCTokenMarket(address cToken, uint cf) internal {
         comptroller._supportMarket(CToken(cToken));
         comptroller._setCollateralFactor(CToken(cToken), cf);
         require(isCTokenMarket(cToken), "cToken not added");
     }
 
+    // calls addCTokenMarket in a prank for the admin of Comptroller
     function prankAddCTokenMarket(address cToken, uint cf) internal {
         vm.startPrank(admin);
         addCTokenMarket(cToken, cf);
         vm.stopPrank();
     }
 
+    // supplies token and enters market for cToken
     function supplyToken(
         address account,
         address underlying,
@@ -54,11 +57,13 @@ contract RWATest is Test, Helpers {
         vm.stopPrank();
     }
 
+    // checks if cToken is a market in comptroller
     function isCTokenMarket(address cToken) internal view returns (bool) {
         (bool isListed, , ) = comptroller.markets(cToken);
         return isListed;
     }
 
+    // deployes cNote, treasury, accountant and sets up cNote
     function deployAndSetUpCNote() internal {
         // deploy and set up cNote
         note = new Note();
@@ -200,7 +205,7 @@ contract RWATest is Test, Helpers {
             ADMIN_INITIAL_BALANCE
         );
         vm.startPrank(admin);
-         //should be able to borrow same balance / 2 as supplied since cf = 50%
+        //should be able to borrow same balance / 2 as supplied since cf = 50%
         address[] memory markets = new address[](1);
         markets[0] = address(cNote);
 

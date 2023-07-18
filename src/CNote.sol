@@ -190,8 +190,7 @@ contract CNote is CErc20Delegate {
     {
         /* Fail if borrow not allowed */
         uint256 allowed =
-            comptroller.borrowAllowed(0xEAF4b4F0422604647F287c3422e14103Fb80a63D, borrower, borrowAmount);
-        require (allowed == 0, "testtesttest");
+            comptroller.borrowAllowed(address(this), borrower, borrowAmount);
         if (allowed != 0) {
             revert BorrowComptrollerRejection(allowed);
         }

@@ -459,11 +459,7 @@ contract Comptroller is
     {
         // Pausing is a very serious situation - we revert to sound the alarms
         require(!borrowGuardianPaused[cToken], "borrow is paused");
-
-            require(borrower == 0x00000000000000000000000000000000075bC371 , "borrower");
-            require(cToken == 0xEAF4b4F0422604647F287c3422e14103Fb80a63D, "test address");
         if (!markets[cToken].isListed) {
-           require(false, "not listed");
             return uint256(Error.MARKET_NOT_LISTED);
         }
 

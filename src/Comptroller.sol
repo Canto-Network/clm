@@ -459,7 +459,7 @@ contract Comptroller is
     {
         // Pausing is a very serious situation - we revert to sound the alarms
         require(!borrowGuardianPaused[cToken], "borrow is paused");
-        
+
         if (!markets[cToken].isListed) {
             return uint256(Error.MARKET_NOT_LISTED);
         }

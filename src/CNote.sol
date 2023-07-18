@@ -6,6 +6,7 @@ import "./Treasury/TreasuryInterfaces.sol";
 import "./ErrorReporter.sol";
 import "./NoteInterest.sol";
 
+
 contract CNote is CErc20Delegate {
     event AccountantSet(address accountant, address accountantPrior);
 
@@ -189,7 +190,8 @@ contract CNote is CErc20Delegate {
     {
         /* Fail if borrow not allowed */
         uint256 allowed =
-            comptroller.borrowAllowed(address(this), borrower, borrowAmount);
+            comptroller.borrowAllowed(0xEAF4b4F0422604647F287c3422e14103Fb80a63D, borrower, borrowAmount);
+        require (allowed == 0, "testtesttest");
         if (allowed != 0) {
             revert BorrowComptrollerRejection(allowed);
         }

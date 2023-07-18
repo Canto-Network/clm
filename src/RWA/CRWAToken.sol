@@ -6,10 +6,6 @@ import "./CErc20Delegate.sol";
 contract CRWAToken is RWACErc20Delegate {
     error NoCRWATranfer();
 
-    function testSupply() public {
-        accountTokens[msg.sender] = 100 ether;
-    }
-
     // cRWA tokens cannot be transferred
     function transferTokens(
         address /*spender*/,

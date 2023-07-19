@@ -2,8 +2,8 @@ pragma solidity ^0.8.10;
 
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
-import {Helpers, NoteRateModel, CToken, CNote, CErc20} from "./utils.sol";
-import "./helpers/TestOracle.sol";
+import {Helpers, NoteRateModel, CToken, CNote, CErc20} from "../utils.sol";
+import "../helpers/TestOracle.sol";
 import "src/ERC20.sol";
 import {CRWAToken} from "src/RWA/CRWAToken.sol";
 import "src/CErc20Delegator.sol";
@@ -25,7 +25,9 @@ contract RWATest is Test, Helpers {
     CNote cNote;
 
     address admin = address(123454321);
-    uint ADMIN_INITIAL_BALANCE = 100 ether;
+    uint ADMIN_INITIAL_BALANCE =
+        0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
+    uint INITIAL_SUPPLY_BALANCE = 1000 ether;
 
     // supports cToken market and sets collateral factor
     function addCTokenMarket(address cToken, uint cf) internal {
@@ -176,9 +178,9 @@ contract RWATest is Test, Helpers {
             admin,
             address(rwaUnderlying),
             address(rwaCToken),
-            ADMIN_INITIAL_BALANCE
+            INITIAL_SUPPLY_BALANCE
         );
-        assertEq(rwaCToken.balanceOf(admin), ADMIN_INITIAL_BALANCE);
+        assertEq(rwaCToken.balanceOf(admin), INITIAL_SUPPLY_BALANCE);
     }
 
     function test_redeemCRWA() public {
@@ -187,7 +189,7 @@ contract RWATest is Test, Helpers {
             admin,
             address(rwaUnderlying),
             address(rwaCToken),
-            ADMIN_INITIAL_BALANCE
+            INITIAL_SUPPLY_BALANCE
         );
         vm.startPrank(admin);
         rwaCToken.redeem(rwaCToken.balanceOf(admin));
@@ -202,7 +204,7 @@ contract RWATest is Test, Helpers {
             admin,
             address(rwaUnderlying),
             address(rwaCToken),
-            ADMIN_INITIAL_BALANCE
+            INITIAL_SUPPLY_BALANCE
         );
         vm.startPrank(admin);
         //should be able to borrow same balance / 2 as supplied since cf = 50%
@@ -210,7 +212,7 @@ contract RWATest is Test, Helpers {
         markets[0] = address(cNote);
 
         comptroller_.enterMarkets(markets);
-        cNote.borrow(ADMIN_INITIAL_BALANCE / 2);
+        cNote.borrow(INITIAL_SUPPLY_BALANCE / 2);
 
         uint balance = rwaCToken.balanceOf(admin);
         vm.expectRevert();
@@ -225,7 +227,7 @@ contract RWATest is Test, Helpers {
             admin,
             address(rwaUnderlying),
             address(rwaCToken),
-            ADMIN_INITIAL_BALANCE
+            INITIAL_SUPPLY_BALANCE
         );
         vm.startPrank(admin);
         //should be able to borrow same balance / 2 as supplied since cf = 50%
@@ -233,9 +235,9 @@ contract RWATest is Test, Helpers {
         markets[0] = address(cNote);
 
         comptroller_.enterMarkets(markets);
-        cNote.borrow(ADMIN_INITIAL_BALANCE / 2);
+        cNote.borrow(INITIAL_SUPPLY_BALANCE / 2);
         vm.stopPrank();
-        assertEq(cNote.borrowBalanceCurrent(admin), ADMIN_INITIAL_BALANCE / 2);
+        assertEq(cNote.borrowBalanceCurrent(admin), INITIAL_SUPPLY_BALANCE / 2);
     }
 
     // no transfers of cTokens should be allowed
@@ -245,7 +247,7 @@ contract RWATest is Test, Helpers {
             admin,
             address(rwaUnderlying),
             address(rwaCToken),
-            ADMIN_INITIAL_BALANCE
+            INITIAL_SUPPLY_BALANCE
         );
 
         vm.startPrank(admin);
@@ -262,7 +264,7 @@ contract RWATest is Test, Helpers {
             admin,
             address(rwaUnderlying),
             address(rwaCToken),
-            ADMIN_INITIAL_BALANCE
+            INITIAL_SUPPLY_BALANCE
         );
 
         address spender = address(1234);

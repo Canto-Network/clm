@@ -1,5 +1,6 @@
 pragma solidity ^0.8.10;
 
+import "forge-std/Test.sol";
 import {Helpers, NoteRateModel, CToken, CNote, CErc20} from "../utils.sol";
 import "src/Comptroller.sol";
 import "src/ERC20.sol";
@@ -13,16 +14,17 @@ import "src/Treasury/TreasuryDelegate.sol";
 import "src/Treasury/TreasuryDelegator.sol";
 import "src/Swap/BaseV1-core.sol";
 import "../helpers/TestOracle.sol";
+import {RWACErc20} from "src/RWA/CErc20_RWA.sol";
 
-contract RWASetup is Helpers {
+contract RWASetup is Test {
     address admin = address(123454321);
     uint ADMIN_INITIAL_BALANCE =
         0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
-    
+
     Comptroller comptroller;
 
     ERC20 rwaUnderlying;
-    CRWAToken rwaCToken;
+    RWACErc20 rwaCToken;
 
     Note note;
     CNote cNote;
@@ -61,6 +63,15 @@ contract RWASetup is Helpers {
     function isCTokenMarket(address cToken) internal view returns (bool) {
         (bool isListed, , ) = comptroller.markets(cToken);
         return isListed;
+    }
+
+    // function to instantiate Comptroller,
+    function setUpComptroller() internal {
+        Comptroller comptroller_ = new Comptroller();
+        Unitroller unitroller_ = new Unitroller();
+        unitroller_._setPendingImplementation(address(comptroller_));
+        comptroller_._become(unitroller_);
+        comptroller = Comptroller(address(unitroller_));
     }
 
     // deployes cNote, treasury, accountant and sets up cNote
@@ -120,11 +131,10 @@ contract RWASetup is Helpers {
         require(note.accountant() == address(accountant));
     }
 
-    function setUp() public virtual{
+    function setUp() public virtual {
         vm.startPrank(admin);
         // set up comptroller and unitroller and set to local comptroller
         setUpComptroller();
-        comptroller = Comptroller(address(unitroller_));
 
         rwaCToken = new CRWAToken();
         rwaUnderlying = new ERC20(

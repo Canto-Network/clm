@@ -1,10 +1,8 @@
 pragma solidity ^0.8.10;
-
-import "forge-std/Test.sol";
 import "forge-std/console.sol";
 import "./RWASetup.sol";
 
-contract RWATest is Test, RWASetup {
+contract RWATest is RWASetup {
     uint INITIAL_SUPPLY_BALANCE = 1000 ether;
 
     function test_deploy() public {
@@ -55,7 +53,7 @@ contract RWATest is Test, RWASetup {
         address[] memory markets = new address[](1);
         markets[0] = address(cNote);
 
-        comptroller_.enterMarkets(markets);
+        comptroller.enterMarkets(markets);
         cNote.borrow(INITIAL_SUPPLY_BALANCE / 2);
 
         uint balance = rwaCToken.balanceOf(admin);
@@ -78,7 +76,7 @@ contract RWATest is Test, RWASetup {
         address[] memory markets = new address[](1);
         markets[0] = address(cNote);
 
-        comptroller_.enterMarkets(markets);
+        comptroller.enterMarkets(markets);
         cNote.borrow(INITIAL_SUPPLY_BALANCE / 2);
         vm.stopPrank();
         assertEq(cNote.borrowBalanceCurrent(admin), INITIAL_SUPPLY_BALANCE / 2);

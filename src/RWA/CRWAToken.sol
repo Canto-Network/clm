@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.10;
 
-import "./CErc20Delegate.sol";
+import "./CErc20Delegate_RWA.sol";
 
 contract CRWAToken is RWACErc20Delegate {
     error NoCRWATranfer();

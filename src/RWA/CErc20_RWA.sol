@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 pragma solidity ^0.8.10;
 
-import "./CToken.sol";
+import "./CToken_RWA.sol";
 
 interface CompLike {
     function delegate(address delegatee) external;

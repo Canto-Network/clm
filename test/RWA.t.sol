@@ -238,7 +238,7 @@ contract RWATest is Test, Helpers {
         assertEq(cNote.borrowBalanceCurrent(admin), ADMIN_INITIAL_BALANCE / 2);
     }
 
-    // no trasnfers of cTokens should be allowed
+    // no transfers of cTokens should be allowed
     function test_transfer() public {
         prankAddCTokenMarket(address(rwaCToken), 0);
         supplyToken(
@@ -255,7 +255,7 @@ contract RWATest is Test, Helpers {
         vm.stopPrank();
     }
 
-    // no trasnfers of cTokens should be allowed
+    // no transfers of cTokens should be allowed
     function test_transferFrom() public {
         prankAddCTokenMarket(address(rwaCToken), 0);
         supplyToken(

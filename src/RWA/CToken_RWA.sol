@@ -800,7 +800,7 @@ abstract contract RWACToken is CTokenInterface, ExponentialNoError, TokenErrorRe
      * @param borrower The account having collateral seized
      * @param seizeTokens The number of cTokens to seize
      */
-    function seizeInternal(address seizerToken, address liquidator, address borrower, uint seizeTokens) internal {
+    function seizeInternal(address seizerToken, address liquidator, address borrower, uint seizeTokens) internal virtual {
         /* Fail if seize not allowed */
         uint allowed = comptroller.seizeAllowed(address(this), seizerToken, liquidator, borrower, seizeTokens);
         if (allowed != 0) {

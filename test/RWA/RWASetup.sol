@@ -15,6 +15,7 @@ import "src/Treasury/TreasuryDelegator.sol";
 import "src/Swap/BaseV1-core.sol";
 import "../helpers/TestOracle.sol";
 import {RWACErc20} from "src/RWA/CErc20_RWA.sol";
+import "../helpers/TestWhitelist.sol";
 
 contract RWASetup is Test {
     address admin = address(123454321);
@@ -22,12 +23,20 @@ contract RWASetup is Test {
         0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
 
     Comptroller comptroller;
+    AccountantDelegator accountant;
 
     ERC20 rwaUnderlying;
     RWACErc20 rwaCToken;
 
     Note note;
     CNote cNote;
+
+    TestWhitelist whitelist;
+
+    function getNote(address account, uint amount) internal {
+        vm.prank(address(accountant));
+        note.transfer(account, amount);
+    }
 
     // supports cToken market and sets collateral factor
     function addCTokenMarket(address cToken, uint cf) internal {
@@ -72,6 +81,9 @@ contract RWASetup is Test {
         unitroller_._setPendingImplementation(address(comptroller_));
         comptroller_._become(unitroller_);
         comptroller = Comptroller(address(unitroller_));
+
+        comptroller._setLiquidationIncentive(0.1e18);
+        comptroller._setCloseFactor(0.5e18);
     }
 
     // deployes cNote, treasury, accountant and sets up cNote
@@ -112,7 +124,7 @@ contract RWASetup is Test {
             "treasury implementation not set"
         );
         // set up accountant
-        AccountantDelegator accountant = new AccountantDelegator(
+        accountant = new AccountantDelegator(
             address(new AccountantDelegate()),
             admin,
             address(cNote),
@@ -165,6 +177,10 @@ contract RWASetup is Test {
         BaseV1Factory factory = new BaseV1Factory();
         WETH wcanto = new WETH("Wrapped Canto", "WCANTO");
         comptroller._setPriceOracle(new TestOracle());
+
+        // deploy whitelist and set in rwaCToken
+        whitelist = new TestWhitelist();
+        CRWAToken(address(rwaCToken)).setWhitelist(address(whitelist));
 
         // deploy and set up note
         deployAndSetUpCNote();

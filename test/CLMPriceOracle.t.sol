@@ -18,6 +18,8 @@ contract CLMPriceOracleTest is Test, Helpers {
     CLMPriceOracle public priceOracle;
     BaseV1Factory public factory;
     CRWAToken public rwaCToken;
+    // rwa cToken not added to oracle
+    CRWAToken public rwaCTokenUnadded;
 
     function setUp() public {
         vm.startPrank(admin);
@@ -57,6 +59,25 @@ contract CLMPriceOracleTest is Test, Helpers {
         );
         address[] memory rwaCTokenList = new address[](1);
         rwaCTokenList[0] = address(rwaCToken);
+
+        rwaCTokenUnadded = new CRWAToken();
+        // deploy other cToken to not place into oracle
+        rwaCTokenUnadded = CRWAToken(
+            address(
+                new CErc20Delegator(
+                    address(rwaUnderlying),
+                    Comptroller(address(unitroller_)),
+                    new NoteRateModel(0),
+                    1e18,
+                    "cRWA",
+                    "cRWA",
+                    18,
+                    payable(admin),
+                    address(rwaCTokenUnadded),
+                    ""
+                )
+            )
+        );
 
         // deploy CLMPriceOracle
         priceOracle = new CLMPriceOracle(
@@ -228,13 +249,15 @@ contract CLMPriceOracleTest is Test, Helpers {
     function test_rwaAssetList() public {
         assert(!priceOracle.isRWACToken(address(cNote)));
         assert(priceOracle.isRWACToken(address(rwaCToken)));
+        assert(!priceOracle.isRWACToken(address(rwaCTokenUnadded)));
     }
 
     function test_rwaOraclePrice() public {
-        vm.prank(address(comptroller_));
+        vm.startPrank(address(comptroller_));
         assert(priceOracle.getUnderlyingPrice(CToken(address(rwaCToken))) == 1e18);
-        vm.prank(address(comptroller_));
         assert(priceOracle.getUnderlyingPrice(CToken(address(cNote))) == 1e18);
+        assert(priceOracle.getUnderlyingPrice(CToken(address(rwaCTokenUnadded))) == 0);
+        vm.stopPrank();
     }
 
 }          

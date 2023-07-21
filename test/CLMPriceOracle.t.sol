@@ -233,6 +233,8 @@ contract CLMPriceOracleTest is Test, Helpers {
     function test_rwaOraclePrice() public {
         vm.prank(address(comptroller_));
         assert(priceOracle.getUnderlyingPrice(CToken(address(rwaCToken))) == 1e18);
+        vm.prank(address(comptroller_));
+        assert(priceOracle.getUnderlyingPrice(CToken(address(cNote))) == 1e18);
     }
 
 }          

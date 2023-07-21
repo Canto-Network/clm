@@ -3,6 +3,8 @@ pragma solidity ^0.8.10;
 import "./utils.sol";
 import {CLMPriceOracle} from "./CLMPriceOracle.sol";
 import "forge-std/Test.sol";
+import {TestOracle} from "./helpers/TestOracle.sol";
+import {CRWAToken} from "src/RWA/CRWAToken.sol";
 
 contract CLMPriceOracleTest is Test, Helpers {
     address public admin = address(1);
@@ -15,6 +17,7 @@ contract CLMPriceOracleTest is Test, Helpers {
     ERC20Test public usdt;
     CLMPriceOracle public priceOracle;
     BaseV1Factory public factory;
+    CRWAToken public rwaCToken;
 
     function setUp() public {
         vm.startPrank(admin);
@@ -31,6 +34,30 @@ contract CLMPriceOracleTest is Test, Helpers {
         // deploy usdc / usdt
         usdc = new ERC20Test("usdc", "usdc", 0, 6);
         usdt = new ERC20Test("usdt", "usdt", 0, 6);
+        //deploy test rwa oracle
+        TestOracle rwaTestOracle = new TestOracle();
+        // deploy rwacToken to place into oracle
+        rwaCToken = new CRWAToken();
+        ERC20 rwaUnderlying = new ERC20("rwa", "rwa", 0, 18);
+        rwaCToken = CRWAToken(
+            address(
+                new CErc20Delegator(
+                    address(rwaUnderlying),
+                    Comptroller(address(unitroller_)),
+                    new NoteRateModel(0),
+                    1e18,
+                    "cRWA",
+                    "cRWA",
+                    18,
+                    payable(admin),
+                    address(rwaCToken),
+                    ""
+                )
+            )
+        );
+        address[] memory rwaCTokenList = new address[](1);
+        rwaCTokenList[0] = address(rwaCToken);
+
         // deploy CLMPriceOracle
         priceOracle = new CLMPriceOracle(
             address(comptroller_),
@@ -39,7 +66,9 @@ contract CLMPriceOracleTest is Test, Helpers {
             address(usdc),
             address(usdt),
             address(wcanto),
-            address(note)
+            address(note),
+            address(rwaTestOracle),
+            rwaCTokenList
         );
 
         vm.stopPrank();
@@ -186,8 +215,6 @@ contract CLMPriceOracleTest is Test, Helpers {
         uint priceLp = priceOracle.getUnderlyingPrice(CToken(address(cPair)));
         uint priceLpRouter = router.getUnderlyingPrice(CToken(address(cPair)));
         assertEq(priceLp, priceLpRouter);
-        console.log("priceLp: ", priceLp);
-        console.log("priceLpRouter: ",priceLpRouter);
     }
 
     function test_getNotePrice() public {
@@ -197,6 +224,15 @@ contract CLMPriceOracleTest is Test, Helpers {
         uint price = priceOracle.getUnderlyingPrice(CToken(address(cNote)));
         assertEq(price, 1e18);
     }
-    // fun part:: testing LPToken Pricing
+
+    function test_rwaAssetList() public {
+        assert(!priceOracle.isRWACToken(address(cNote)));
+        assert(priceOracle.isRWACToken(address(rwaCToken)));
+    }
+
+    function test_rwaOraclePrice() public {
+        vm.prank(address(comptroller_));
+        assert(priceOracle.getUnderlyingPrice(CToken(address(rwaCToken))) == 1e18);
+    }
 
 }          

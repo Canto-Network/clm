@@ -5,6 +5,8 @@ import {PriceOracle} from "src/PriceOracle.sol";
 import {IBaseV1Pair} from "src/Swap/BaseV1-periphery.sol";
 import {erc20, Math} from "src/Swap/BaseV1-libs.sol";
 import {CToken} from "src/CToken.sol";
+import {IRWAPriceOracle} from "src/RWA/IRWAPriceOracle.sol";
+
 
 pragma solidity 0.8.11;
 
@@ -35,6 +37,11 @@ contract CLMPriceOracle is PriceOracle {
     // address of router contract
     address public immutable router;
 
+    // address of RWA price oracle
+    address public immutable rwaOracle;
+    // address list for RWA cTokens
+    address[] public rwaCTokens;
+
     // modifier to prevent other contracts from using the data from this oracle
     modifier onlyComptroller(address sender) {
         if (sender != comptroller) {
@@ -52,6 +59,8 @@ contract CLMPriceOracle is PriceOracle {
     /// @param _usdc, address of usdc
     /// @param _wcanto, address of wcanto
     /// @param _note, address of note
+    /// @param _rwaOracle, address of rwa oracle
+    /// @param _rwaCTokens, address list of rwa cTokens
     constructor(
         address _comptroller, 
         address _router, 
@@ -59,7 +68,9 @@ contract CLMPriceOracle is PriceOracle {
         address _usdt,
         address _usdc,
         address _wcanto,
-        address _note
+        address _note,
+        address _rwaOracle,
+        address[] memory _rwaCTokens
     ) {
         comptroller = _comptroller;
         router = _router;
@@ -68,6 +79,24 @@ contract CLMPriceOracle is PriceOracle {
         note = _note;
         wcanto = _wcanto;
         cCanto = _cCanto;
+        // add rwaData
+        rwaOracle = _rwaOracle;
+        for (uint i; i< _rwaCTokens.length; ++i) {
+            rwaCTokens.push(_rwaCTokens[i]);
+        }
+    }
+
+    /**
+     * @notice  returns if the address of the cToken is a rwaCToken
+     * @param   cToken  address of cToken to check
+     */
+    function isRWACToken(address cToken) public view returns(bool) {
+        for (uint i; i < rwaCTokens.length; ++i) {
+            if (cToken == rwaCTokens[i]) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /// @param cToken, the cToken (treated as CErc20) that is being priced, in the case of cCanto, although it is not a cErc20 it is treated as such.
@@ -75,7 +104,12 @@ contract CLMPriceOracle is PriceOracle {
     function getUnderlyingPrice(CToken cToken) external override view onlyComptroller(msg.sender) returns(uint) {
         address underlying;
         IBaseV1Router router_ = IBaseV1Router(router);
-        // first check whether the cToken is cCanto
+        // first check if this is a rwaCToken
+        if (isRWACToken(address(cToken))) {
+            // return price from rwa oracle
+            return IRWAPriceOracle(rwaOracle).getUnderlyingPrice(address(cToken));
+        }
+        // check whether the cToken is cCanto
         if (address(cToken) == cCanto) {
             // return price from wcanto/note pool
             return getPriceNote(wcanto, false); 

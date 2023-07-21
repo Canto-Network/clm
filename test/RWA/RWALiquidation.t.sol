@@ -24,11 +24,11 @@ contract RWALiquidationTest is RWASetup, ExponentialNoError {
         address borrow,
         address collateral,
         uint amountToRepay
-    ) internal returns (uint) {
+    ) internal view returns (uint) {
         (, uint seizeTokens) = comptroller.liquidateCalculateSeizeTokens(
-            address(cNote),
-            address(rwaCToken),
-            450 ether
+            borrow,
+            collateral,
+            amountToRepay
         );
         uint protocolSeize = mul_(
             seizeTokens,

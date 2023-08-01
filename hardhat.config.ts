@@ -11,21 +11,21 @@ require("dotenv").config();
 const config: HardhatUserConfig = {
   networks: {
     canto_testnet: {
-      url: "http://147.182.255.149:8545",
+      url: "",
       accounts: [process.env.PRIVATE_KEY],
       tags: ["Deployment"],
     },
     canto_livenet: {
-      url: "https://mainnode.plexnode.org:8545",
+      url: "",
       accounts: [process.env.PRIVATE_KEY],
     },
     new_testnet: {
-      url: "http://50.116.1.91:8545",
+      url: "",
       accounts: [process.env.PRIVATE_KEY],
       tags: ["Deployment"],
     },
     official_testnet: {
-      url: "https://canto-testnet.plexnode.wtf",
+      url: "",
       accounts: [process.env.PRIVATE_KEY],
       tags: ["Deployment"],
     },

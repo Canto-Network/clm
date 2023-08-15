@@ -5,6 +5,7 @@ import {CLMPriceOracle} from "./CLMPriceOracle.sol";
 import "forge-std/Test.sol";
 import {TestOracle} from "./helpers/TestOracle.sol";
 import {CRWAToken} from "src/RWA/CRWAToken.sol";
+import {TestRWAOracle} from "./helpers/TestRWAOracle.sol";
 
 contract CLMPriceOracleTest is Test, Helpers {
     address public admin = address(1);
@@ -36,8 +37,7 @@ contract CLMPriceOracleTest is Test, Helpers {
         // deploy usdc / usdt
         usdc = new ERC20Test("usdc", "usdc", 0, 6);
         usdt = new ERC20Test("usdt", "usdt", 0, 6);
-        //deploy test rwa oracle
-        TestOracle rwaTestOracle = new TestOracle();
+
         // deploy rwacToken to place into oracle
         rwaCToken = new CRWAToken();
         ERC20 rwaUnderlying = new ERC20("rwa", "rwa", 0, 18);
@@ -59,6 +59,10 @@ contract CLMPriceOracleTest is Test, Helpers {
         );
         address[] memory rwaCTokenList = new address[](1);
         rwaCTokenList[0] = address(rwaCToken);
+
+        //set up RWAPriceOracle
+        TestRWAOracle rwaOracle = new TestRWAOracle();
+        CRWAToken(address(rwaCToken)).setPriceOracle(address(rwaOracle));
 
         rwaCTokenUnadded = new CRWAToken();
         // deploy other cToken to not place into oracle
@@ -88,7 +92,6 @@ contract CLMPriceOracleTest is Test, Helpers {
             address(usdt),
             address(wcanto),
             address(note),
-            address(rwaTestOracle),
             rwaCTokenList
         );
 

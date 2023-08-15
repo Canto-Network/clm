@@ -16,6 +16,8 @@ import "src/Swap/BaseV1-core.sol";
 import "../helpers/TestOracle.sol";
 import {RWACErc20} from "src/RWA/CErc20_RWA.sol";
 import "../helpers/TestWhitelist.sol";
+import {TestRWAOracle} from "../helpers/TestRWAOracle.sol";
+
 
 contract RWASetup is Test {
     address admin = address(123454321);
@@ -82,7 +84,7 @@ contract RWASetup is Test {
         comptroller_._become(unitroller_);
         comptroller = Comptroller(address(unitroller_));
 
-        comptroller._setLiquidationIncentive(0.1e18);
+        comptroller._setLiquidationIncentive(1e18);
         comptroller._setCloseFactor(0.5e18);
     }
 
@@ -172,6 +174,10 @@ contract RWASetup is Test {
                 )
             )
         );
+
+        //set up RWAPriceOracle
+        TestRWAOracle rwaOracle = new TestRWAOracle();
+        CRWAToken(address(rwaCToken)).setPriceOracle(address(rwaOracle));
 
         //init contracts for router (oracle)
         BaseV1Factory factory = new BaseV1Factory();

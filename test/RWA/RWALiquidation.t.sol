@@ -2,14 +2,16 @@ pragma solidity ^0.8.10;
 
 import "./RWASetup.sol";
 import "src/ExponentialNoError.sol";
+import "../helpers/TestRWAOracle.sol";
+
 
 contract RWALiquidationTest is RWASetup, ExponentialNoError {
     address whiteListedAccount = address(1234567);
     address nonWhiteListedAccount = address(7654321);
     address borrower = address(123);
 
-    uint BORROWER_INITIAL_BALANCE = 1000 ether;
-    uint LIQUIDATOR_NOTE_BALANCE = 1000 ether;
+    uint BORROWER_INITIAL_BALANCE = 1000000 ether;
+    uint LIQUIDATOR_NOTE_BALANCE = 1000000 ether;
 
     function getNoteForLiquidators() internal {
         getNote(whiteListedAccount, LIQUIDATOR_NOTE_BALANCE);
@@ -81,7 +83,7 @@ contract RWALiquidationTest is RWASetup, ExponentialNoError {
         uint expectedSeizure = getExpectedSeizeTokens(
             address(cNote),
             address(rwaCToken),
-            450 ether
+            450000 ether
         );
 
         // attempt to liquidate with non-whitelisted account
@@ -92,11 +94,28 @@ contract RWALiquidationTest is RWASetup, ExponentialNoError {
             )
         );
         vm.prank(nonWhiteListedAccount);
-        cNote.liquidateBorrow(borrower, 450 ether, rwaCToken);
+        cNote.liquidateBorrow(borrower, 450000 ether, rwaCToken);
 
         // whitelisted account should be able to liquidate
         vm.prank(whiteListedAccount);
-        cNote.liquidateBorrow(borrower, 450 ether, rwaCToken);
+        cNote.liquidateBorrow(borrower, 450000 ether, rwaCToken);
+        assertEq(rwaCToken.balanceOf(whiteListedAccount), expectedSeizure);
+    }
+
+    function test_liquidationThreshold() external {
+        getNoteForLiquidators();
+
+        vm.startPrank(whiteListedAccount);
+        // for testing, everything is $1, so minimum liquidation amount is 150k rwaCToken
+        vm.expectRevert();
+        cNote.liquidateBorrow(borrower, 149999 ether, rwaCToken);
+
+        uint expectedSeizure = getExpectedSeizeTokens(
+            address(cNote),
+            address(rwaCToken),
+            150000 ether
+        );
+        cNote.liquidateBorrow(borrower, 150000 ether, rwaCToken);
         assertEq(rwaCToken.balanceOf(whiteListedAccount), expectedSeizure);
     }
 }

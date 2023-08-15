@@ -1,6 +1,8 @@
 pragma solidity ^0.8.10;
 
-interface IRWAPriceOracle {
+import "src/RWA/IRWAPriceOracle.sol";
+
+contract TestRWAOracle is IRWAPriceOracle {
     function latestRoundData()
         external
         view
@@ -10,5 +12,8 @@ interface IRWAPriceOracle {
             uint256 startedAt,
             uint256 updatedAt,
             uint80 answeredInRound
-        );
+        )
+    {
+        return (0, 1e18, 0, 0, 0);
+    }
 }

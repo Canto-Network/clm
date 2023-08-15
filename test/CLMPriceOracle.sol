@@ -6,6 +6,7 @@ import {IBaseV1Pair} from "src/Swap/BaseV1-periphery.sol";
 import {erc20, Math} from "src/Swap/BaseV1-libs.sol";
 import {CToken} from "src/CToken.sol";
 import {IRWAPriceOracle} from "src/RWA/IRWAPriceOracle.sol";
+import {CRWAToken} from "src/RWA/CRWAToken.sol";
 
 
 pragma solidity 0.8.11;
@@ -37,8 +38,6 @@ contract CLMPriceOracle is PriceOracle {
     // address of router contract
     address public immutable router;
 
-    // address of RWA price oracle
-    address public immutable rwaOracle;
     // address list for RWA cTokens
     address[] public rwaCTokens;
 
@@ -59,7 +58,6 @@ contract CLMPriceOracle is PriceOracle {
     /// @param _usdc, address of usdc
     /// @param _wcanto, address of wcanto
     /// @param _note, address of note
-    /// @param _rwaOracle, address of rwa oracle
     /// @param _rwaCTokens, address list of rwa cTokens
     constructor(
         address _comptroller, 
@@ -69,7 +67,6 @@ contract CLMPriceOracle is PriceOracle {
         address _usdc,
         address _wcanto,
         address _note,
-        address _rwaOracle,
         address[] memory _rwaCTokens
     ) {
         comptroller = _comptroller;
@@ -80,7 +77,6 @@ contract CLMPriceOracle is PriceOracle {
         wcanto = _wcanto;
         cCanto = _cCanto;
         // add rwaData
-        rwaOracle = _rwaOracle;
         for (uint i; i< _rwaCTokens.length; ++i) {
             rwaCTokens.push(_rwaCTokens[i]);
         }
@@ -107,7 +103,8 @@ contract CLMPriceOracle is PriceOracle {
         // first check if this is a rwaCToken
         if (isRWACToken(address(cToken))) {
             // return price from rwa oracle
-            return IRWAPriceOracle(rwaOracle).getUnderlyingPrice(address(cToken));
+            (,int256 answer,,,) = IRWAPriceOracle(CRWAToken(address(cToken)).priceOracle()).latestRoundData();
+            return uint(answer);
         }
         // check whether the cToken is cCanto
         if (address(cToken) == cCanto) {

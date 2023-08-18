@@ -5,15 +5,18 @@ import "./RWASetup.sol";
 contract RWATest is RWASetup {
     uint INITIAL_SUPPLY_BALANCE = 1000 ether;
 
+    // make sure RWASetup ran correctly
     function test_deploy() public {
         assertEq(rwaCToken.name(), "cRWA");
     }
 
+    // add CToken to CLM Comptroller markets
     function test_addMarket() public {
         prankAddCTokenMarket(address(rwaCToken), 0);
         assert(isCTokenMarket(address(rwaCToken)));
     }
 
+    // mint cRWA by supplying underlying
     function test_mintCRWA() public {
         prankAddCTokenMarket(address(rwaCToken), 0);
         supplyToken(
@@ -25,6 +28,7 @@ contract RWATest is RWASetup {
         assertEq(rwaCToken.balanceOf(admin), INITIAL_SUPPLY_BALANCE);
     }
 
+    // test redeeming cRWA
     function test_redeemCRWA() public {
         prankAddCTokenMarket(address(rwaCToken), 0.5e18);
         supplyToken(
@@ -63,6 +67,7 @@ contract RWATest is RWASetup {
         vm.stopPrank();
     }
 
+    // should be able to borrow against cRWA just like all other cToken markets
     function test_borrowAgainstRWA() public {
         prankAddCTokenMarket(address(rwaCToken), 0.5e18);
         supplyToken(

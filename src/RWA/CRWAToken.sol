@@ -26,6 +26,10 @@ contract CRWAToken is RWACErc20Delegate {
         whitelist = _whitelist;
     }
 
+    /**
+     * @notice  Admin function to set the price oracle for the RWA underlying
+     * @param   _oracle  New address of price oracle contract
+     */
     function setPriceOracle(address _oracle) external {
         require(
             msg.sender == admin,
@@ -34,7 +38,11 @@ contract CRWAToken is RWACErc20Delegate {
         priceOracle = _oracle;
     }
 
-    // cRWA tokens cannot be transferred
+    /**
+     * @notice  No token transfers can take place for CRWATokens
+     * @dev     Any type of transfer (except liquidations) will revert
+     * @return  uint  For legacy reasons, will always revert
+     */
     function transferTokens(
         address /*spender*/,
         address /*src*/,
@@ -44,8 +52,14 @@ contract CRWAToken is RWACErc20Delegate {
         revert NoCRWATranfer();
     }
 
-    // must check whitelist during liquidation
-    // must check if liquidation will be above minimum liquidation amount
+    /**
+     * @notice  Internal function to seize tokens from a borrower
+     * @dev     Must check whitelist and value of seizeTokens before liquidation
+     * @param   seizerToken  Address of borrowed token calling this internal function
+     * @param   liquidator  Address of liquidator
+     * @param   borrower  Address of borrower
+     * @param   seizeTokens  Amount of tokens to seize
+     */
     function seizeInternal(
         address seizerToken,
         address liquidator,
@@ -67,14 +81,15 @@ contract CRWAToken is RWACErc20Delegate {
             "CRWAToken::seizeInternal: price oracle not set"
         );
         (, int answer, , , ) = IRWAPriceOracle(priceOracle).latestRoundData();
-        
+
         // divide total by 10^(18 + decimals) to get USD value
         uint liquidationAmountUSD = div_(
             mul_(seizeTokens, uint(answer)),
             10 ** (this.decimals() + 18)
         );
         require(
-            liquidationAmountUSD >= MINIMUM_LIQUIDATION_USD, "CRWAToken::seizeInternal: liquidation amount below minimum"
+            liquidationAmountUSD >= MINIMUM_LIQUIDATION_USD,
+            "CRWAToken::seizeInternal: liquidation amount below minimum"
         );
 
         // continue and call normal seizeInternal function

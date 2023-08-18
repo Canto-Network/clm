@@ -4,7 +4,6 @@ import "./RWASetup.sol";
 import "src/ExponentialNoError.sol";
 import "../helpers/TestRWAOracle.sol";
 
-
 contract RWALiquidationTest is RWASetup, ExponentialNoError {
     address whiteListedAccount = address(1234567);
     address nonWhiteListedAccount = address(7654321);
@@ -13,6 +12,7 @@ contract RWALiquidationTest is RWASetup, ExponentialNoError {
     uint BORROWER_INITIAL_BALANCE = 1000000 ether;
     uint LIQUIDATOR_NOTE_BALANCE = 1000000 ether;
 
+    // get note for liquidators to perform liquidations
     function getNoteForLiquidators() internal {
         getNote(whiteListedAccount, LIQUIDATOR_NOTE_BALANCE);
         getNote(nonWhiteListedAccount, LIQUIDATOR_NOTE_BALANCE);
@@ -22,6 +22,7 @@ contract RWALiquidationTest is RWASetup, ExponentialNoError {
         note.approve(address(cNote), LIQUIDATOR_NOTE_BALANCE);
     }
 
+    // calculates the expected seize tokens for a liquidation (amount that the liquidator should receive after protocol take)
     function getExpectedSeizeTokens(
         address borrow,
         address collateral,
@@ -72,10 +73,10 @@ contract RWALiquidationTest is RWASetup, ExponentialNoError {
 
     function test_shortfallSetup() external {
         (, , uint shortfall) = comptroller.getAccountLiquidity(borrower);
-        // console.log(shortfall);
         assertTrue(shortfall > 0);
     }
 
+    // test whitelist is checked before liquidation
     function test_whitelistLiquidation() external {
         // liquidator must be whitelisted
         getNoteForLiquidators();
@@ -102,6 +103,7 @@ contract RWALiquidationTest is RWASetup, ExponentialNoError {
         assertEq(rwaCToken.balanceOf(whiteListedAccount), expectedSeizure);
     }
 
+    // test that liquidation threshold is respected
     function test_liquidationThreshold() external {
         getNoteForLiquidators();
 

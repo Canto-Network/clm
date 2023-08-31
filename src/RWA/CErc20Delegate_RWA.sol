@@ -8,7 +8,7 @@ import "./CErc20_RWA.sol";
  * @notice CTokens which wrap an EIP-20 underlying and are delegated to
  * @author Compound
  */
-contract RWACErc20Delegate is RWACErc20, CDelegateInterface {
+contract CErc20Delegate_RWA is CErc20_RWA, CDelegateInterface {
     /**
      * @notice Construct an empty delegate
      */

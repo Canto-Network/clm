@@ -5,7 +5,7 @@ import "./CErc20Delegate_RWA.sol";
 import "./IWhitelist.sol";
 import "./IRWAPriceOracle.sol";
 
-contract CRWAToken is RWACErc20Delegate {
+contract CRWAToken is CErc20Delegate_RWA {
     error NoCRWATranfer();
     error NotWhitelisted(address account);
 
@@ -19,10 +19,7 @@ contract CRWAToken is RWACErc20Delegate {
      * @param   _whitelist  New address of whitelist contract
      */
     function setWhitelist(address _whitelist) external {
-        require(
-            msg.sender == admin,
-            "CRWAToken::setWhitelist: only admin can set whitelist"
-        );
+        require(msg.sender == admin, "CRWAToken::setWhitelist: only admin can set whitelist");
         whitelist = _whitelist;
     }
 
@@ -31,10 +28,7 @@ contract CRWAToken is RWACErc20Delegate {
      * @param   _oracle  New address of price oracle contract
      */
     function setPriceOracle(address _oracle) external {
-        require(
-            msg.sender == admin,
-            "CRWAToken::setPriceOracle: only admin can set price oracle"
-        );
+        require(msg.sender == admin, "CRWAToken::setPriceOracle: only admin can set price oracle");
         priceOracle = _oracle;
     }
 
@@ -67,19 +61,12 @@ contract CRWAToken is RWACErc20Delegate {
         uint seizeTokens
     ) internal override {
         // check whitelist
-        require(
-            whitelist != address(0),
-            "CRWAToken::seizeInternal: whitelist not set"
-        );
+        require(whitelist != address(0), "CRWAToken::seizeInternal: whitelist not set");
         if (!IWhitelist(whitelist).isWhitelistedReceiver(liquidator)) {
             revert NotWhitelisted(liquidator);
         }
-
         // check liquidation amount
-        require(
-            priceOracle != address(0),
-            "CRWAToken::seizeInternal: price oracle not set"
-        );
+        require(priceOracle != address(0), "CRWAToken::seizeInternal: price oracle not set");
         (, int answer, , , ) = IRWAPriceOracle(priceOracle).latestRoundData();
 
         // divide total by 10^(18 + decimals) to get USD value
@@ -87,10 +74,7 @@ contract CRWAToken is RWACErc20Delegate {
             mul_(seizeTokens, uint(answer)),
             10 ** (this.decimals() + 18)
         );
-        require(
-            liquidationAmountUSD >= MINIMUM_LIQUIDATION_USD,
-            "CRWAToken::seizeInternal: liquidation amount below minimum"
-        );
+        require(liquidationAmountUSD >= MINIMUM_LIQUIDATION_USD, "CRWAToken::seizeInternal: liquidation amount below minimum");
 
         // continue and call normal seizeInternal function
         super.seizeInternal(seizerToken, liquidator, borrower, seizeTokens);

@@ -13,7 +13,7 @@ import "../ExponentialNoError.sol";
  * @notice Abstract base for CTokens
  * @author Compound
  */
-abstract contract RWACToken is CTokenInterface, ExponentialNoError, TokenErrorReporter {
+abstract contract CToken_RWA is CTokenInterface, ExponentialNoError, TokenErrorReporter {
     /**
      * @notice Initialize the money market
      * @param comptroller_ The address of the Comptroller

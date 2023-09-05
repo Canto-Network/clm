@@ -3,7 +3,6 @@ pragma solidity ^0.8.10;
 import "forge-std/Vm.sol";
 import "forge-std/StdInvariant.sol";
 import "./RWASetup.sol";
-import {RWACErc20} from "src/RWA/CErc20_RWA.sol";
 
 contract RWAFuzz is StdInvariant, RWASetup {
     address targetAccount = address(1234567);

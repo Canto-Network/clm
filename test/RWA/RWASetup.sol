@@ -14,7 +14,7 @@ import "src/Treasury/TreasuryDelegate.sol";
 import "src/Treasury/TreasuryDelegator.sol";
 import "src/Swap/BaseV1-core.sol";
 import "../helpers/TestOracle.sol";
-import {RWACErc20} from "src/RWA/CErc20_RWA.sol";
+import {CErc20_RWA} from "src/RWA/CErc20_RWA.sol";
 import "../helpers/TestWhitelist.sol";
 import {TestRWAOracle} from "../helpers/TestRWAOracle.sol";
 
@@ -28,7 +28,7 @@ contract RWASetup is Test {
     AccountantDelegator accountant;
 
     ERC20 rwaUnderlying;
-    RWACErc20 rwaCToken;
+    CErc20_RWA rwaCToken;
 
     Note note;
     CNote cNote;

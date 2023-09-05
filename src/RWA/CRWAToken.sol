@@ -6,7 +6,7 @@ import "./IWhitelist.sol";
 import "./IRWAPriceOracle.sol";
 
 contract CRWAToken is CErc20Delegate_RWA {
-    error NoCRWATranfer();
+    error NoCRWATransfer();
     error NotWhitelisted(address account);
 
     address whitelist;
@@ -43,7 +43,7 @@ contract CRWAToken is CErc20Delegate_RWA {
         address /*dst*/,
         uint /*tokens*/
     ) internal pure override returns (uint) {
-        revert NoCRWATranfer();
+        revert NoCRWATransfer();
     }
 
     /**
@@ -65,14 +65,21 @@ contract CRWAToken is CErc20Delegate_RWA {
         if (!IWhitelist(whitelist).isWhitelistedReceiver(liquidator)) {
             revert NotWhitelisted(liquidator);
         }
-        // check liquidation amount
+        /** check liquidation amount */
+
+        // get current price of underlying RWA
         require(priceOracle != address(0), "CRWAToken::seizeInternal: price oracle not set");
         (, int answer, , , ) = IRWAPriceOracle(priceOracle).latestRoundData();
 
+        // convert seizeTokens to underlying RWA amount (exchange rate is scaled to 1e18)
+        uint underlyingTokens = div_(
+            mul_(seizeTokens, exchangeRateStoredInternal()),
+            1e18
+        );
         // divide total by 10^(18 + decimals) to get USD value
         uint liquidationAmountUSD = div_(
-            mul_(seizeTokens, uint(answer)),
-            10 ** (this.decimals() + 18)
+            mul_(underlyingTokens, uint(answer)),
+            10 ** (EIP20Interface(underlying).decimals() + 18)
         );
         require(liquidationAmountUSD >= MINIMUM_LIQUIDATION_USD, "CRWAToken::seizeInternal: liquidation amount below minimum");
 

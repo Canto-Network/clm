@@ -98,7 +98,7 @@ contract RWATest is RWASetup {
         );
 
         vm.startPrank(admin);
-        vm.expectRevert(CRWAToken.NoCRWATranfer.selector);
+        vm.expectRevert(CRWAToken.NoCRWATransfer.selector);
         rwaCToken.transfer(address(1234), 1 ether);
 
         vm.stopPrank();
@@ -120,7 +120,7 @@ contract RWATest is RWASetup {
         vm.stopPrank();
 
         vm.startPrank(spender);
-        vm.expectRevert(CRWAToken.NoCRWATranfer.selector);
+        vm.expectRevert(CRWAToken.NoCRWATransfer.selector);
         rwaCToken.transferFrom(admin, spender, 100 ether);
 
         vm.stopPrank();

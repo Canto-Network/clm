@@ -103,7 +103,8 @@ contract CLMPriceOracle is PriceOracle {
         if (isRWACToken(address(cToken))) {
             // return price from rwa oracle
             (,int256 answer,,,) = IRWAPriceOracle(CRWAToken(address(cToken)).priceOracle()).latestRoundData();
-            return uint(answer);
+            // price will be scaled by the price oracle decimals but we need it to be by 10^18
+            return uint(answer) * (10 ** (18 - IRWAPriceOracle(CRWAToken(address(cToken)).priceOracle()).decimals()));
         }
         // check whether the cToken is cCanto
         if (address(cToken) == cCanto) {

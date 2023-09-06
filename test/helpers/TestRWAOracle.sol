@@ -16,4 +16,7 @@ contract TestRWAOracle is IRWAPriceOracle {
     {
         return (0, 1e18, 0, 0, 0);
     }
+    function decimals() external view returns (uint8) {
+        return 18;
+    }
 }

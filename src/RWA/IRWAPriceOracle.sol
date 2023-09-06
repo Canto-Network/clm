@@ -11,4 +11,5 @@ interface IRWAPriceOracle {
             uint256 updatedAt,
             uint80 answeredInRound
         );
+    function decimals() external view returns (uint8);
 }

@@ -16,7 +16,7 @@ contract TestWhitelist is IWhitelist {
         whitelist[_address] = _whitelisted;
     }
 
-    function isWhitelistedReceiver(address receiver) external view override returns (bool) {
+    function isCustomer(address receiver) external view override returns (bool) {
         return whitelist[receiver];
     }
 }

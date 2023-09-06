@@ -68,8 +68,8 @@ contract RWALiquidationTest is RWASetup, ExponentialNoError {
     }
 
     function test_whitelistSetup() external {
-        assertTrue(whitelist.isWhitelistedReceiver(whiteListedAccount));
-        assertFalse(whitelist.isWhitelistedReceiver(nonWhiteListedAccount));
+        assertTrue(whitelist.isCustomer(whiteListedAccount));
+        assertFalse(whitelist.isCustomer(nonWhiteListedAccount));
     }
 
     function test_shortfallSetup() external {

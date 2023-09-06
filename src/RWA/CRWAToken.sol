@@ -62,7 +62,7 @@ contract CRWAToken is CErc20Delegate_RWA {
     ) internal override {
         // check whitelist
         require(whitelist != address(0), "CRWAToken::seizeInternal: whitelist not set");
-        if (!IWhitelist(whitelist).isWhitelistedReceiver(liquidator)) {
+        if (!IWhitelist(whitelist).isCustomer(liquidator)) {
             revert NotWhitelisted(liquidator);
         }
         /** check liquidation amount */

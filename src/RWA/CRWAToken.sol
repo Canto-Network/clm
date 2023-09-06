@@ -76,7 +76,7 @@ contract CRWAToken is CErc20Delegate_RWA {
             mul_(seizeTokens, exchangeRateStoredInternal()),
             1e18
         );
-        // divide total by 10^(underlyin Decimals + priceDecimals) to get USD value
+        // divide total by 10^(underlyingDecimals + priceDecimals) to get USD value
         uint liquidationAmountUSD = div_(
             mul_(underlyingTokens, uint(answer)),
             10 ** (EIP20Interface(underlying).decimals() + IRWAPriceOracle(priceOracle).decimals())

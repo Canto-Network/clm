@@ -500,7 +500,7 @@ abstract contract CToken_RWA is CTokenInterface, ExponentialNoError, TokenErrorR
              *  redeemTokens = redeemAmountIn / exchangeRate
              *  redeemAmount = redeemAmountIn
              */
-            redeemTokens = div_(redeemAmountIn, exchangeRate);
+            redeemTokens = divUp_(redeemAmountIn, exchangeRate);
             redeemAmount = redeemAmountIn;
         }
 

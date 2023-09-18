@@ -6,7 +6,7 @@ import "hardhat-deploy";
 import "ethereum-waffle";
 import "hardhat-preprocessor";
 require("dotenv").config();
-
+require("./tasks")
 
 const config: HardhatUserConfig = {
   networks: {

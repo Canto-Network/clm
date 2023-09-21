@@ -96,15 +96,19 @@ contract CLMPriceOracle is PriceOracle {
 
     /// @param cToken, the cToken (treated as CErc20) that is being priced, in the case of cCanto, although it is not a cErc20 it is treated as such.
     /// @return price, the price of the asset in Note, scaled by 1e18
-    function getUnderlyingPrice(CToken cToken) external override view onlyComptroller(msg.sender) returns(uint) {
+    function getUnderlyingPrice(CToken cToken) external override view returns(uint) {
         address underlying;
         IBaseV1Router router_ = IBaseV1Router(router);
         // first check if this is a rwaCToken
         if (isRWACToken(address(cToken))) {
             // return price from rwa oracle
             (,int256 answer,,,) = IRWAPriceOracle(CRWAToken(address(cToken)).priceOracle()).latestRoundData();
+            // get decimals of underlying token
+            uint256 underlyingDecimals = erc20(ICErc20(address(cToken)).underlying()).decimals();
+            // get amount price should be scaled by (18(scale) + 18 (decimals of note) - underlyingDecimals - priceOracleDecimals(how much it is already scaled by))
+            uint256 scaleFactor = 36 - underlyingDecimals - IRWAPriceOracle(CRWAToken(address(cToken)).priceOracle()).decimals();
             // price will be scaled by the price oracle decimals but we need it to be by 10^18
-            return uint(answer) * (10 ** (18 - IRWAPriceOracle(CRWAToken(address(cToken)).priceOracle()).decimals()));
+            return uint(answer) * (10 ** scaleFactor);
         }
         // check whether the cToken is cCanto
         if (address(cToken) == cCanto) {

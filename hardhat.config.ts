@@ -11,7 +11,7 @@ require("./tasks")
 const config: HardhatUserConfig = {
   networks: {
     canto_testnet: {
-      url: "https://canto-testnet.plexnode.wtf",
+      url: "",
       accounts: [process.env.PRIVATE_KEY],
       tags: ["Deployment"],
     },

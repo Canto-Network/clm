@@ -260,4 +260,10 @@ contract ExponentialNoError {
     {
         return Double({mantissa: div_(mul_(a, doubleScale), b)});
     }
+
+   function divUp_(uint256 a, Exp memory b) internal pure returns (uint256) {
+        // (a * 1e18 + b.mantissa - 1) / b.mantissa
+        // reverts in sub_ if b.mantissa == 0 but that's ok because division by 0 would revert anyway
+        return div_(add_(mul_(a, expScale), sub_(b.mantissa, 1)), b.mantissa);
+    }
 }

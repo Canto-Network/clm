@@ -2,7 +2,7 @@ pragma solidity ^0.8.10;
 
 import "forge-std/Test.sol";
 import {Helpers, NoteRateModel, CToken, CNote, CErc20} from "../utils.sol";
-import "src/Comptroller.sol";
+import "src/ComptrollerV2.sol";
 import "src/ERC20.sol";
 import {CRWAToken} from "src/RWA/CRWAToken.sol";
 import "src/CErc20Delegator.sol";
@@ -24,7 +24,7 @@ contract RWASetup is Test {
     uint ADMIN_INITIAL_BALANCE =
         0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
 
-    Comptroller comptroller;
+    ComptrollerV2 comptroller;
     AccountantDelegator accountant;
 
     ERC20 rwaUnderlying;
@@ -78,14 +78,14 @@ contract RWASetup is Test {
 
     // function to instantiate Comptroller,
     function setUpComptroller() internal {
-        Comptroller comptroller_ = new Comptroller();
+        ComptrollerV2 comptroller_ = new ComptrollerV2(); // use ComptrollerV2 for RWA
         Unitroller unitroller_ = new Unitroller();
         unitroller_._setPendingImplementation(address(comptroller_));
         comptroller_._become(unitroller_);
-        comptroller = Comptroller(address(unitroller_));
+        comptroller = ComptrollerV2(address(unitroller_));
 
         comptroller._setLiquidationIncentive(1e18);
-        comptroller._setCloseFactor(0.5e18);
+        comptroller._setCloseFactor(1e18);
     }
 
     // deployes cNote, treasury, accountant and sets up cNote

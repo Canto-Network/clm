@@ -257,4 +257,43 @@ contract UpgradeComptroller is Test {
         (, liquidity,) = unitroller.getAccountLiquidity(whitelistedUser);
         assertEq(liquidity, 0);
     }
+
+    // fuzz test borrowing with 99% collateral factor
+    function testFuzz_Borrows(uint32 supplyAmount) public {
+        console.logUint(supplyAmount);
+        console.logUint(1914);
+        vm.assume(supplyAmount >= 1e6);
+        vm.assume(supplyAmount < 2500e6);
+
+        // upgrade to comptrollerV2 and increase CF for cUSYC
+        upgrade();
+        increaseCollateralFactor();
+
+        address whitelistedUser = 0xEf109EF4969261eB92A9F00d6639b440160Cc237;
+
+        bool isListed;
+        uint256 cNoteCollateralFactor;
+        bool isComped;
+
+        vm.startPrank(whitelistedUser);
+
+        // supply 1000 USYC
+        uint256 valueSupplied = 1.05e18 * uint256(supplyAmount) / 1e6; // price at this block
+        console.logUint(valueSupplied);
+        usycContract.approve(cUsycAdress, supplyAmount);
+        uint256 mintStatus = cUsycContract.mint(supplyAmount);
+
+        // check account liquidity
+        uint256 liquidity;
+        (, liquidity,) = unitroller.getAccountLiquidity(whitelistedUser);
+        assertEq(liquidity, valueSupplied * 0.99e18 / 1e18);
+
+        // borrow max note
+        noteContract.approve(cNoteAddress, liquidity);
+        uint256 borrowStatus = cNote.borrow(liquidity);
+
+        // check account liquidity
+        (, liquidity,) = unitroller.getAccountLiquidity(whitelistedUser);
+        assertEq(liquidity, 0);
+    }
 }

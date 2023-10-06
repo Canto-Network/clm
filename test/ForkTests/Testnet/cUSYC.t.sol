@@ -56,6 +56,7 @@ contract cUsycTests is Test {
         vm.selectFork(cantoTestnetFork);
         vm.rollFork(3_915_377); // go to block height where we know testnet state
         upgrade();
+        increaseCollateralFactor();
     }
 
     // function to upgrade unitroller implentation to comptrollerV2
@@ -69,6 +70,15 @@ contract cUsycTests is Test {
 
         // accept comptrollerV2 as implementation
         comptrollerV2._become(unitrollerContract);
+        vm.stopPrank();
+    }
+
+    function increaseCollateralFactor() public {
+        vm.startPrank(admin);
+
+        //set collateral factor to 0.99
+        unitroller._setCollateralFactor(cUsyc, 0.99e18);
+
         vm.stopPrank();
     }
 

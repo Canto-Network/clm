@@ -85,8 +85,36 @@ contract cUsycTests is Test {
         usyc.approve(cUsycAdress, 100e6);
         cUsycContract.mint(100e6);
 
+        // check user cUsyc balance
+        uint256 cUsycBalance = cUsyc.balanceOf(whitelistedUser);
+        assertEq(cUsycBalance, 100e6);
+
         // ensure user cannot transfer cUsyc
         vm.expectRevert();
         cUsycContract.transfer(nonWhitelistedUser, 1e6);
+    }
+
+    function test_TransferFuzz(uint32 transferAmount) public {
+        address nonWhitelistedUser = 0x03cf8710BBA14C32232Efe0613fD44b8199995EC;
+        address whitelistedUser = 0xEf109EF4969261eB92A9F00d6639b440160Cc237;
+        vm.startPrank(whitelistedUser);
+
+        // ensure user cannot transfer usyc underlying
+        vm.expectRevert();
+        usyc.transfer(nonWhitelistedUser, transferAmount);
+
+        if (transferAmount <= 2500e6) {
+            // user deposits usyc into cUsyc
+            usyc.approve(cUsycAdress, transferAmount);
+            cUsycContract.mint(transferAmount);
+
+            // check user cUsyc balance
+            uint256 cUsycBalance = cUsyc.balanceOf(whitelistedUser);
+            assertEq(cUsycBalance, transferAmount);
+
+            // ensure user cannot transfer cUsyc
+            vm.expectRevert();
+            cUsycContract.transfer(nonWhitelistedUser, transferAmount);
+        }
     }
 }

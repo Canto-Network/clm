@@ -49,43 +49,45 @@ contract Upgrade is Test {
     ProposalStore store = ProposalStore(proposalStore);
     GovernorBravoDelegate gov = GovernorBravoDelegate(governorBravoDelegator);
 
-    bytes[] calldatas;
+    address[] targets;
     string[] signatures;
+    bytes[] calldatas;
     uint256[] values;
-    address[] addresses;
 
     function setUp() public {
-        mainnetFork = vm.createFork("http://143.198.228.162:8545");
+        mainnetFork = vm.createFork("https://mainnode.plexnode.org:8545");
         vm.selectFork(mainnetFork);
-        vm.rollFork(6_318_958);
+        // vm.rollFork(6_318_958);
     }
 
     function upgrade() public {
         vm.startPrank(govshuttle);
-        // deploy comptroller v2
-        ComptrollerV2 comptrollerV2 = new ComptrollerV2();
 
         // encode data for proposal
-        bytes memory i_bytes = abi.encodePacked(comptrollerV2);
-        addresses.push(unitroller);
+        address comptrollerAddress = 0x0fbc04D1ac348BBD2126246f57EeA08290a56A79;
+        bytes32 plsWork = bytes32(uint256(uint160(comptrollerAddress)));
+        bytes memory i_bytes = abi.encodePacked(plsWork);
+        targets.push(unitroller);
         values.push(0);
         signatures.push("_setPendingImplementation(address)");
         calldatas.push(i_bytes);
 
         // add proposal to store
         store.AddProposal(
-            129, "upgrade comptroller", "proposal to upgrade comptroller", addresses, values, signatures, calldatas
+            129, "upgrade comptroller", "proposal to upgrade comptroller", targets, values, signatures, calldatas
         );
+
+        vm.stopPrank();
 
         // queue proposal
         gov.queue(129);
-        vm.warp(block.timestamp + 100);
+        skip(3600);
 
         ProposalStore.Proposal memory prop = store.QueryProp(129);
         assertEq(prop.targets[0], unitroller);
 
         // execute proposal
-        // gov.execute(129);
+        gov.execute(129);
     }
 
     function test_addProposal() public {

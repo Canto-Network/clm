@@ -65,8 +65,8 @@ contract Upgrade is Test {
 
         // encode data for proposal
         address comptrollerAddress = 0x0fbc04D1ac348BBD2126246f57EeA08290a56A79;
-        bytes32 plsWork = bytes32(uint256(uint160(comptrollerAddress)));
-        bytes memory i_bytes = abi.encodePacked(plsWork);
+        bytes32 leftPaddedAddress = bytes32(uint256(uint160(comptrollerAddress)));
+        bytes memory i_bytes = abi.encodePacked(leftPaddedAddress);
         targets.push(unitroller);
         values.push(0);
         signatures.push("_setPendingImplementation(address)");

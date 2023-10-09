@@ -57,19 +57,26 @@ contract Upgrade is Test {
     function setUp() public {
         mainnetFork = vm.createFork("https://mainnode.plexnode.org:8545");
         vm.selectFork(mainnetFork);
-        // vm.rollFork(6_318_958);
     }
 
     function upgrade() public {
         vm.startPrank(govshuttle);
 
-        // encode data for proposal
+        // tx to set pending implementation
         address comptrollerAddress = 0x0fbc04D1ac348BBD2126246f57EeA08290a56A79;
         bytes32 leftPaddedAddress = bytes32(uint256(uint160(comptrollerAddress)));
         bytes memory i_bytes = abi.encodePacked(leftPaddedAddress);
         targets.push(unitroller);
         values.push(0);
         signatures.push("_setPendingImplementation(address)");
+        calldatas.push(i_bytes);
+
+        // tx to accept implementation
+        bytes32 leftPaddedUnitroller = bytes32(uint256(uint160(unitroller)));
+        i_bytes = abi.encodePacked(leftPaddedUnitroller);
+        targets.push(comptrollerAddress);
+        values.push(0);
+        signatures.push("_become(address)");
         calldatas.push(i_bytes);
 
         // add proposal to store
@@ -83,16 +90,17 @@ contract Upgrade is Test {
         gov.queue(129);
         skip(3600);
 
-        ProposalStore.Proposal memory prop = store.QueryProp(129);
-        assertEq(prop.targets[0], unitroller);
-
         // execute proposal
         gov.execute(129);
     }
 
     function test_addProposal() public {
+        // check implementation before upgrade
+        assertEq(unitrollerContract.comptrollerImplementation(), 0xD5DbF5cd90f158597f916591dBaDDe27E4A4d4Cf);
+
         upgrade();
-        // ProposalStore.Proposal memory prop = store.QueryProp(129);
-        // console.logString(prop.title);
+
+        // check implementation after upgrade
+        assertEq(unitrollerContract.comptrollerImplementation(), comptrollerAddress);
     }
 }

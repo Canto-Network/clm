@@ -11,7 +11,7 @@ contract Upgrade is Test {
     uint256 mainnetFork;
 
     address unitroller = 0x5E23dC409Fc2F832f83CEc191E245A191a4bCc5C;
-    address comptrollerAddress = 0x0fbc04D1ac348BBD2126246f57EeA08290a56A79; // new comptrollerV2 address
+    address comptrollerAddress = 0xBfcf6fF12933E9146f93D7A98DA26612A20f1c1e; // new comptrollerV2 address
 
     address proposalStore = 0x648a5Aa0C4FbF2C1CF5a3B432c2766EeaF8E402d;
     address govshuttle = 0xB7a78c42532424AC7B2584F02E58C6699c660925;

@@ -16,7 +16,7 @@ const config: HardhatUserConfig = {
       tags: ["Deployment"],
     },
     canto_livenet: {
-      url: "",
+      url: "https://mainnode.plexnode.org:8545",
       accounts: [process.env.PRIVATE_KEY],
     },
     new_testnet: {

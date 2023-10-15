@@ -36,8 +36,11 @@ contract usycTests is Test {
     bytes[] calldatas;
     uint256[] values;
 
-    CLMPriceOracle clmOracle;
-    CErc20Delegator usycDelegator;
+    address clmOracleAddress = 0xEc13678Bf31CA304bed5b7b7e3c71FeD0B450a24;
+    address payable cUSYCDelegatorAddress = payable(0x0355E393cF0cf5486D9CAefB64407b7B1033C2f1);
+
+    CLMPriceOracle clmOracle = CLMPriceOracle(clmOracleAddress);
+    CErc20Delegator usycDelegator = CErc20Delegator(cUSYCDelegatorAddress);
     CRWAToken usycDelegate;
     ComptrollerInterface IComptroller = ComptrollerInterface(unitroller);
     InterestRateModel interestRateModel = InterestRateModel(0x9748b6d59fd4C4f087294087bD94b6B9d95B4293);
@@ -48,7 +51,7 @@ contract usycTests is Test {
     uint256[] borrowCaps;
 
     function setUp() public {
-        mainnetFork = vm.createFork("https://node-f3495086-1-canto.ansybl.io/evm_rpc/");
+        mainnetFork = vm.createFork("");
         vm.selectFork(mainnetFork);
     }
 
@@ -89,8 +92,7 @@ contract usycTests is Test {
     function proposals() public {
         bytes memory i_bytes;
         // tx to set comptroller oracle
-        bytes32 leftPaddedOracle = bytes32(uint256(uint160(address(clmOracle))));
-        i_bytes = abi.encodePacked(leftPaddedOracle);
+        i_bytes = hex"000000000000000000000000ec13678bf31ca304bed5b7b7e3c71fed0b450a24";
 
         targets.push(unitroller);
         values.push(0);
@@ -98,35 +100,16 @@ contract usycTests is Test {
         calldatas.push(i_bytes);
 
         // tx to support cUSYC in comptroller
-        bytes32 leftPaddedCusyc = bytes32(uint256(uint160(address(usycDelegator))));
-        i_bytes = abi.encodePacked(leftPaddedCusyc);
+        i_bytes = hex"0000000000000000000000000355e393cf0cf5486d9caefb64407b7b1033c2f1";
 
         targets.push(unitroller);
         values.push(0);
         signatures.push("_supportMarket(address)");
         calldatas.push(i_bytes);
 
-        // tx to set whitelist for cUSYC
-        bytes32 leftPaddedWhitelist = bytes32(uint256(uint160(address(whitelist))));
-        i_bytes = abi.encodePacked(leftPaddedWhitelist);
-
-        targets.push(address(usycDelegator));
-        values.push(0);
-        signatures.push("setWhitelist(address)");
-        calldatas.push(i_bytes);
-
-        // tx to set price oracle for cUSYC
-        bytes32 leftPaddedUsycOracle = bytes32(uint256(uint160(address(usycOracle))));
-        i_bytes = abi.encodePacked(leftPaddedUsycOracle);
-
-        targets.push(address(usycDelegator));
-        values.push(0);
-        signatures.push("setPriceOracle(address)");
-        calldatas.push(i_bytes);
-
         // tx to set collateral factor for cUSYC
-        bytes32 leftPaddedCollateralFactor = bytes32(uint256(0.99e18));
-        i_bytes = abi.encodePacked(leftPaddedCusyc, leftPaddedCollateralFactor);
+        i_bytes =
+            hex"0000000000000000000000000355e393cf0cf5486d9caefb64407b7b1033c2f10000000000000000000000000000000000000000000000000dbd2fc137a30000";
 
         targets.push(unitroller);
         values.push(0);
@@ -134,8 +117,7 @@ contract usycTests is Test {
         calldatas.push(i_bytes);
 
         // tx to set close factor
-        bytes32 leftPaddedCloseFactor = bytes32(uint256(1e18));
-        i_bytes = abi.encodePacked(leftPaddedCloseFactor);
+        i_bytes = hex"0000000000000000000000000000000000000000000000000de0b6b3a7640000";
 
         targets.push(unitroller);
         values.push(0);
@@ -143,8 +125,7 @@ contract usycTests is Test {
         calldatas.push(i_bytes);
 
         // tx to set liquidation incentive
-        bytes32 leftPaddedLiquidationIncentive = bytes32(uint256(1.01e18));
-        i_bytes = abi.encodePacked(leftPaddedLiquidationIncentive);
+        i_bytes = hex"0000000000000000000000000000000000000000000000000e043da617250000";
 
         targets.push(unitroller);
         values.push(0);
@@ -152,12 +133,8 @@ contract usycTests is Test {
         calldatas.push(i_bytes);
 
         // tx to set borrow cap for cUSYC (must use array of cTokens)
-        cTokens.push(address(usycDelegator));
-        borrowCaps.push(uint256(1));
-        // bytes32 paddedCtokenArray = bytes32(cTokens);
-        // bytes32 paddedBorrowCap = bytes32(borrowCaps);
         i_bytes =
-            hex"0000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000010000000000000000000000002e234dae75c793f67a35089c9d99245e1c58470b00000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001";
+            hex"0000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000355e393cf0cf5486d9caefb64407b7b1033c2f100000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001";
         // i_bytes = bytes(calldataBytes);
 
         targets.push(unitroller);
@@ -182,21 +159,21 @@ contract usycTests is Test {
         gov.execute(139);
     }
 
-    function testSetup() public {
-        deploy();
+    // function testSetup() public {
+    //     deploy();
 
-        // assert that USYC is deployed
-        assertEq(usycDelegator.underlying(), USYC);
-        assertEq(usycDelegator.admin(), timelock);
+    //     // assert that USYC is deployed
+    //     assertEq(usycDelegator.underlying(), USYC);
+    //     assertEq(usycDelegator.admin(), timelock);
 
-        // assert that CLM oracle is deployed
-        assertEq(clmOracle.comptroller(), unitroller);
-        assertEq(clmOracle.router(), 0xa252eEE9BDe830Ca4793F054B506587027825a8e);
-        assertEq(clmOracle.cCanto(), 0xB65Ec550ff356EcA6150F733bA9B954b2e0Ca488);
-    }
+    //     // assert that CLM oracle is deployed
+    //     assertEq(clmOracle.comptroller(), unitroller);
+    //     assertEq(clmOracle.router(), 0xa252eEE9BDe830Ca4793F054B506587027825a8e);
+    //     assertEq(clmOracle.cCanto(), 0xB65Ec550ff356EcA6150F733bA9B954b2e0Ca488);
+    // }
 
     function testProposals() public {
-        deploy();
+        // deploy();
         proposals();
 
         ComptrollerV2 comptroller = ComptrollerV2(payable(unitroller));

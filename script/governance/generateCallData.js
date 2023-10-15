@@ -50,15 +50,40 @@ async function main() {
 
 	// let priceOracleAddr = "0xCE1541C1dE95ea8d726b3ead31EdB8A8543915F2";
 
-	let ctoken = ["0x2e234DAe75C793f67A35089C9d99245E1C58470b"];
+	let CLMPriceOracle = "0xEc13678Bf31CA304bed5b7b7e3c71FeD0B450a24";
+	let cUSYCDelegator = "0x0355E393cF0cf5486D9CAefB64407b7B1033C2f1";
+
+	let ctoken = ["0x0355E393cF0cf5486D9CAefB64407b7B1033C2f1"];
 	let borrowcap = [1];
 
+	let data = abiCoder.encode(["address"], [CLMPriceOracle]);
+	console.log("setOracle: ", data);
+
+	data = abiCoder.encode(["address"], [cUSYCDelegator]);
+	console.log("support cUSYC: ", data);
+
+	data = abiCoder.encode(
+		["address", "uint256"],
+		[cUSYCDelegator, ethers.utils.parseUnits("0.99", "18")]
+	);
+	console.log("setCollateralFactor: ", data);
+
+	data = abiCoder.encode(["uint256"], [ethers.utils.parseUnits("1", "18")]);
+	console.log("setCloseFactor: ", data);
+
+	data = abiCoder.encode(
+		["uint256"],
+		[ethers.utils.parseUnits("1.01", "18")]
+	);
+	console.log("setLiquidationIncentive: ", data);
+
 	data = abiCoder.encode(["address[]", "uint[]"], [ctoken, borrowcap]);
+	console.log("setBorrowCap: ", data);
+
 	// data = abiCoder.encode(
 	// 	["address[]", "uint[]", "uint[]"],
 	// 	[tokens, supplySpeeds, borrowSpeeds]
 	// );
-	console.log(data);
 
 	// data2 = abiCoder.encode(["address[]"], [["0x00cEe48F9c6fca37852c5bB9FF36b207892879bC"]]);
 	// console.log(data2);

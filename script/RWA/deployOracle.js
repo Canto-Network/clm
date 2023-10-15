@@ -8,10 +8,12 @@ const mainnet = {
 	USDC: "0x80b5a32E4F032B2a058b4F29EC95EEfEEB87aDcd",
 	wCanto: "0x826551890Dc65655a0Aceca109aB11AbDbD7a07B",
 	NOTE: "0x4e71A2E537B7f9D9413D3991D37958c0b5e1e503",
-	rwaCtokens: [""],
+	rwaCtokens: ["0x0355E393cF0cf5486D9CAefB64407b7B1033C2f1"],
 };
 
 async function main() {
+	[dep] = await ethers.getSigners();
+
 	const CLMPriceOracleFactory = await ethers.getContractFactory(
 		"CLMPriceOracle"
 	);

@@ -50,10 +50,14 @@ async function main() {
 
 	// let priceOracleAddr = "0xCE1541C1dE95ea8d726b3ead31EdB8A8543915F2";
 
-	data = abiCoder.encode(
-		["address[]", "uint[]", "uint[]"],
-		[tokens, supplySpeeds, borrowSpeeds]
-	);
+	let ctoken = ["0x2e234DAe75C793f67A35089C9d99245E1C58470b"];
+	let borrowcap = [1];
+
+	data = abiCoder.encode(["address[]", "uint[]"], [ctoken, borrowcap]);
+	// data = abiCoder.encode(
+	// 	["address[]", "uint[]", "uint[]"],
+	// 	[tokens, supplySpeeds, borrowSpeeds]
+	// );
 	console.log(data);
 
 	// data2 = abiCoder.encode(["address[]"], [["0x00cEe48F9c6fca37852c5bB9FF36b207892879bC"]]);

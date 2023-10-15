@@ -8,27 +8,26 @@ import {CToken} from "src/CToken.sol";
 import {IRWAPriceOracle} from "src/RWA/IRWAPriceOracle.sol";
 import {CRWAToken} from "src/RWA/CRWAToken.sol";
 
-
 pragma solidity 0.8.11;
 
 interface IBaseV1Router {
-    function pairFor(address, address, bool) external view returns(address);
-    function isPair(address) external view returns(bool);
-    function isStable(address) external view returns(bool);
+    function pairFor(address, address, bool) external view returns (address);
+    function isPair(address) external view returns (bool);
+    function isStable(address) external view returns (bool);
 }
 
-interface ICErc20 { 
-    function underlying() external view returns(address);
+interface ICErc20 {
+    function underlying() external view returns (address);
 }
 
-contract CLMPriceOracle is PriceOracle {
+contract CLMPriceOracleTest is PriceOracle {
     // address of cUsdc (underlying asset will be statically priced)
     address public immutable usdc;
     // address of cUsdt (underlying asset will be statically priced)
     address public immutable usdt;
     // address of cCanto (so we can set the underlying to wcanto)
     address public immutable cCanto;
-    // address of note 
+    // address of note
     address public immutable note;
     // address of wcanto
     address public immutable wcanto;
@@ -50,8 +49,8 @@ contract CLMPriceOracle is PriceOracle {
         _;
     }
 
-    /// @dev Initializes PriceOracle, by setting immutable addresses 
-    /// @param _comptroller, address of protocol comptroller 
+    /// @dev Initializes PriceOracle, by setting immutable addresses
+    /// @param _comptroller, address of protocol comptroller
     /// @param _router, address of protocol router
     /// @param _cCanto, address of CCanto lm
     /// @param _usdt, address of usdt
@@ -60,9 +59,9 @@ contract CLMPriceOracle is PriceOracle {
     /// @param _note, address of note
     /// @param _rwaCTokens, address list of rwa cTokens
     constructor(
-        address _comptroller, 
-        address _router, 
-        address _cCanto, 
+        address _comptroller,
+        address _router,
+        address _cCanto,
         address _usdt,
         address _usdc,
         address _wcanto,
@@ -77,7 +76,7 @@ contract CLMPriceOracle is PriceOracle {
         wcanto = _wcanto;
         cCanto = _cCanto;
         // add rwaData
-        for (uint i; i< _rwaCTokens.length; ++i) {
+        for (uint256 i; i < _rwaCTokens.length; ++i) {
             rwaCTokens.push(_rwaCTokens[i]);
         }
     }
@@ -86,8 +85,8 @@ contract CLMPriceOracle is PriceOracle {
      * @notice  returns if the address of the cToken is a rwaCToken
      * @param   cToken  address of cToken to check
      */
-    function isRWACToken(address cToken) public view returns(bool) {
-        for (uint i; i < rwaCTokens.length; ++i) {
+    function isRWACToken(address cToken) public view returns (bool) {
+        for (uint256 i; i < rwaCTokens.length; ++i) {
             if (cToken == rwaCTokens[i]) {
                 return true;
             }
@@ -97,19 +96,19 @@ contract CLMPriceOracle is PriceOracle {
 
     /// @param cToken, the cToken (treated as CErc20) that is being priced, in the case of cCanto, although it is not a cErc20 it is treated as such.
     /// @return price, the price of the asset in Note, scaled by 1e18
-    function getUnderlyingPrice(CToken cToken) external override view onlyComptroller(msg.sender) returns(uint) {
+    function getUnderlyingPrice(CToken cToken) external view override onlyComptroller(msg.sender) returns (uint256) {
         address underlying;
         IBaseV1Router router_ = IBaseV1Router(router);
         // first check if this is a rwaCToken
         if (isRWACToken(address(cToken))) {
             // return price from rwa oracle
-            (,int256 answer,,,) = IRWAPriceOracle(CRWAToken(address(cToken)).priceOracle()).latestRoundData();
-            return uint(answer);
+            (, int256 answer,,,) = IRWAPriceOracle(CRWAToken(address(cToken)).priceOracle()).latestRoundData();
+            return uint256(answer);
         }
         // check whether the cToken is cCanto
         if (address(cToken) == cCanto) {
             // return price from wcanto/note pool
-            return getPriceNote(wcanto, false); 
+            return getPriceNote(wcanto, false);
         } else {
             // this is a CErc20, get the underlying address
             underlying = address(ICErc20(address(cToken)).underlying());
@@ -121,7 +120,7 @@ contract CLMPriceOracle is PriceOracle {
         }
         // if the underlying is usdc or usdt
         if ((underlying == usdc) || (underlying == usdt)) {
-            uint decimals = 10 ** erc20(underlying).decimals();
+            uint256 decimals = 10 ** erc20(underlying).decimals();
             return 1e18 * 1e18 / (decimals);
         }
         // if the underlying is a pair
@@ -133,24 +132,25 @@ contract CLMPriceOracle is PriceOracle {
                 return getPriceNote(underlying, true);
             } else {
                 return getPriceCanto(underlying) * getPriceNote(wcanto, false) / 1e18;
-            }  
+            }
         }
     }
 
     /// @param pair, the address of the pair that the lpToken was minted from
-    /// @return price, the price of the lpToken 
-    function getPriceLp(IBaseV1Pair pair) public view returns(uint) {
-        uint[] memory supply = pair.sampleSupply(12, 1);
-        uint[] memory prices;
-        uint[] memory unitReserves;
-        uint[] memory assetReserves;
+    /// @return price, the price of the lpToken
+    function getPriceLp(IBaseV1Pair pair) public view returns (uint256) {
+        uint256[] memory supply = pair.sampleSupply(12, 1);
+        uint256[] memory prices;
+        uint256[] memory unitReserves;
+        uint256[] memory assetReserves;
         address token0 = pair.token0();
         address token1 = pair.token1();
-        uint decimals;
+        uint256 decimals;
 
         // stables will be traded between note (unit asset is note)
         if (pair.stable()) {
-           if (token0 == note) { //token0 is the unit, token1 will be priced with respect to this asset initially
+            if (token0 == note) {
+                //token0 is the unit, token1 will be priced with respect to this asset initially
                 decimals = 10 ** (erc20(token1).decimals()); // we must normalize the price of token1 to 18 decimals
                 prices = pair.sample(token1, decimals, 12, 1);
                 (unitReserves, assetReserves) = pair.sampleReserves(12, 1);
@@ -159,9 +159,10 @@ contract CLMPriceOracle is PriceOracle {
                 prices = pair.sample(token0, decimals, 12, 1);
                 (assetReserves, unitReserves) = pair.sampleReserves(12, 1);
             }
-        } else { 
+        } else {
             // the unit reserve will be Canto
-            if (token0 == address(wcanto)) { // token0 is Canto, and the unit asset of this pair is Canto
+            if (token0 == address(wcanto)) {
+                // token0 is Canto, and the unit asset of this pair is Canto
                 decimals = 10 ** (erc20(token1).decimals());
                 prices = pair.sample(token1, decimals, 12, 1);
                 (unitReserves, assetReserves) = pair.sampleReserves(12, 1);
@@ -172,17 +173,18 @@ contract CLMPriceOracle is PriceOracle {
             }
         }
         // now calcuate TVL from twaps and average
-        uint LpPricesCumulative;
-        
+        uint256 LpPricesCumulative;
+
         // average over most recent 12 TWAPS
-        for(uint i; i < 12; ++i) {
-            uint token0TVL = (assetReserves[i] * prices[i]) / decimals;
-            uint token1TVL = unitReserves[i]; // price of the unit asset is always 1
+        for (uint256 i; i < 12; ++i) {
+            uint256 token0TVL = (assetReserves[i] * prices[i]) / decimals;
+            uint256 token1TVL = unitReserves[i]; // price of the unit asset is always 1
             LpPricesCumulative += (token0TVL + token1TVL) * 1e18 / supply[i];
         }
-        uint LpPrice = LpPricesCumulative / 12; // take the average of the cumulative prices 
-                
-        if (pair.stable()) { // this asset has been priced in terms of Note
+        uint256 LpPrice = LpPricesCumulative / 12; // take the average of the cumulative prices
+
+        if (pair.stable()) {
+            // this asset has been priced in terms of Note
             return LpPrice;
         }
         // this asset has been priced in terms of Canto
@@ -191,17 +193,17 @@ contract CLMPriceOracle is PriceOracle {
 
     /// @param token_, the asset to be priced in terms of Canto
     /// @return price, the price of the asset in terms of canto, in the case of failure, return 0
-    function getPriceCanto(address token_) public view returns(uint) {
+    function getPriceCanto(address token_) public view returns (uint256) {
         erc20 token = erc20(token_);
         address pair = getVolatilePair(token_);
         // this pair does not exist, return 0
-        uint price;
+        uint256 price;
         if (pair == address(0)) {
             // price has already been initialized to zero
             return price;
         }
         // pair exists, now return the quoted amount of Canto for 10**token_decimals
-        uint decimals = 10 ** token.decimals(); 
+        uint256 decimals = 10 ** token.decimals();
         // return 0 if there aren't enough observations
         if (IBaseV1Pair(pair).observationLength() < 8) {
             return 0;
@@ -215,7 +217,7 @@ contract CLMPriceOracle is PriceOracle {
 
     /// @param token_, the asset to be priced in terms of Canto
     /// @return price, the price of the asset in terms of canto, in the case of failure, return 0
-    function getPriceNote(address token_, bool stable) public view returns(uint) {
+    function getPriceNote(address token_, bool stable) public view returns (uint256) {
         erc20 token = erc20(token_);
         address pair;
         if (stable) {
@@ -225,13 +227,13 @@ contract CLMPriceOracle is PriceOracle {
             pair = getVolatilePair(note);
         }
         // this pair does not exist, return 0
-        uint price;
+        uint256 price;
         if (pair == address(0)) {
             // price has already been initialized to zero
             return price;
         }
         // pair exists, now return the quoted amount of Canto for 10**token_decimals
-        uint decimals = 10 ** token.decimals(); 
+        uint256 decimals = 10 ** token.decimals();
         // return 0 if there aren't enough observations
         if (IBaseV1Pair(pair).observationLength() < 8) {
             return 0;
@@ -245,10 +247,10 @@ contract CLMPriceOracle is PriceOracle {
 
     /// @param token_, asset token in stable pair
     /// @return pair, address of pair if it is to exist, otherwise return address(0)
-    function getStablePair(address token_) public view returns(address) {
+    function getStablePair(address token_) public view returns (address) {
         IBaseV1Router router_ = IBaseV1Router(router);
         // return address of pair if it was to be deployed through the router's CREATE2 method
-        address pair  = router_.pairFor(note, token_, true);
+        address pair = router_.pairFor(note, token_, true);
         // if the pair does not exist, return address(0)
         if (!router_.isPair(pair)) {
             pair = address(0);
@@ -258,7 +260,7 @@ contract CLMPriceOracle is PriceOracle {
 
     /// @param token_, asset token in non-stable pair
     /// @return pair, address of pair if it is to exist
-    function getVolatilePair(address token_) public view returns(address) {
+    function getVolatilePair(address token_) public view returns (address) {
         IBaseV1Router router_ = IBaseV1Router(router);
         address pair = router_.pairFor(wcanto, token_, false);
         // if the pair does not exist return address(0)
@@ -267,4 +269,4 @@ contract CLMPriceOracle is PriceOracle {
         }
         return pair;
     }
-}   
+}
